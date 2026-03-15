@@ -674,7 +674,9 @@ let nmChart    = null;
 //  MAIN
 // ─────────────────────────────────────────────────────────────
 const params  = new URLSearchParams(window.location.search);
-const STUDENT = params.get('student') || '';
+// Normalize ID — strip decimals so "231.0" == "231"
+const normalizeId = v => String(v||'').trim().replace(/\.0+$/, '');
+const STUDENT = normalizeId(params.get('student'));
 
 if (!STUDENT) {
   window.location.href = '404.html';
@@ -686,12 +688,13 @@ Papa.parse('./jut_student_results.csv', {
   header: true,
   download: true,
   skipEmptyLines: true,
+  dynamicTyping: false,
   complete(results) {
     advanceLoad(70);
     const allRows = results.data;
 
     // Filter to this student
-    const rows = allRows.filter(r => String(r.student_id||'').trim() === STUDENT);
+    const rows = allRows.filter(r => normalizeId(r.student_id) === STUDENT);
 
     if (!rows.length) {
       window.location.href = '404.html';
