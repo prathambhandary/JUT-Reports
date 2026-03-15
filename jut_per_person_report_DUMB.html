@@ -1,0 +1,1134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sailor Report — FireWave</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+
+  <style>
+    :root {
+      --ink:      #0a0806;
+      --parch:    #1a1208;
+      --smoke:    #2a2218;
+      --fog:      #3d3225;
+      --gold:     #c8922a;
+      --gold-hi:  #f0b840;
+      --gold-dim: #7a5518;
+      --ember:    #e84c0e;
+      --teal:     #5cb8b2;
+      --green:    #2ecc71;
+      --red:      #c0392b;
+      --orange:   #e67e22;
+      --magenta:  #c05ca0;
+      --amber:    #e8a020;
+      --pale:     #d4c4a0;
+      --muted:    #7a6a50;
+      --border:   #3d3225;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--pale);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* grain */
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 999;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: .45;
+    }
+
+    /* sea */
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 110% 55% at 50% 100%, #0a1f2e 0%, transparent 65%),
+        radial-gradient(ellipse 70% 35% at 85% 110%, #0d3348 0%, transparent 55%),
+        linear-gradient(180deg, #0a0806 0%, #0d0b07 55%, #081520 100%);
+    }
+
+    /* rope */
+    .rope-top {
+      position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 200;
+      background: repeating-linear-gradient(90deg,
+        var(--gold-dim) 0px, var(--gold) 4px,
+        var(--gold-dim) 8px, #5a3e10 12px,
+        var(--gold-dim) 16px);
+      box-shadow: 0 2px 14px rgba(200,146,42,.35);
+    }
+
+    /* embers */
+    .embers { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .ember {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: var(--gold-hi); opacity: 0;
+      left: var(--x); bottom: -4px;
+      animation: rise var(--dur) ease-in infinite var(--delay);
+    }
+    @keyframes rise {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      10%  { opacity: .8; }
+      80%  { opacity: .2; }
+      100% { opacity: 0; transform: translateY(-88vh) translateX(calc(var(--sw)*28px)) scale(.1); }
+    }
+
+    /* loading */
+    #loading {
+      position: fixed; inset: 0; z-index: 500;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--ink);
+      gap: 18px;
+    }
+    .load-skull { font-size: 3rem; animation: bob 1.5s ease-in-out infinite; }
+    @keyframes bob {
+      0%,100% { transform: translateY(0) rotate(-3deg); }
+      50%      { transform: translateY(-10px) rotate(3deg); }
+    }
+    .load-text {
+      font-family: 'Uncial Antiqua', serif;
+      color: var(--gold); font-size: 1.1rem; letter-spacing: .1em;
+      animation: flicker 2s infinite;
+    }
+    @keyframes flicker {
+      0%,94%,100% { opacity: 1; } 95% { opacity: .6; } 97% { opacity: 1; } 98% { opacity: .8; }
+    }
+    .load-bar-wrap {
+      width: 220px; height: 4px; background: var(--fog); border-radius: 2px; overflow: hidden;
+    }
+    .load-bar {
+      height: 100%; width: 0%; background: linear-gradient(90deg, var(--gold-dim), var(--gold-hi));
+      border-radius: 2px; transition: width .4s ease;
+      box-shadow: 0 0 8px var(--gold);
+    }
+
+    /* page */
+    .page { max-width: 1200px; margin: 0 auto; padding: 0 22px 90px; position: relative; z-index: 2; }
+
+    /* nav */
+    nav.top-nav {
+      position: sticky; top: 0; z-index: 100;
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 6px;
+      padding: 10px 16px;
+      background: rgba(10,8,6,.92); backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--fog);
+    }
+    nav.top-nav a {
+      color: var(--muted); text-decoration: none;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem; letter-spacing: .1em;
+      padding: 4px 11px; border: 1px solid var(--fog); border-radius: 3px;
+      transition: all .2s;
+    }
+    nav.top-nav a:hover { color: var(--gold); border-color: var(--gold-dim); background: rgba(200,146,42,.08); }
+
+    /* ── HERO ── */
+    .hero {
+      padding: 64px 20px 40px;
+      text-align: center;
+      position: relative;
+    }
+    .hero-skull {
+      font-size: 2.8rem; display: block; margin-bottom: 12px;
+      filter: drop-shadow(0 0 20px rgba(240,184,64,.5));
+      animation: bob 3s ease-in-out infinite;
+    }
+    .hero-name {
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(1.8rem, 5vw, 3.4rem);
+      color: var(--gold-hi);
+      letter-spacing: .04em;
+      text-shadow: 0 0 30px rgba(240,184,64,.4), 0 2px 0 #3a2000, 0 4px 20px rgba(0,0,0,.8);
+      animation: flicker 5s infinite;
+    }
+    .hero-meta {
+      font-style: italic; color: var(--muted);
+      font-size: clamp(.85rem, 2vw, 1rem);
+      margin-top: 8px; letter-spacing: .06em;
+    }
+    .hero-divider {
+      display: flex; align-items: center; gap: 14px;
+      max-width: 460px; margin: 22px auto;
+    }
+    .hero-divider::before, .hero-divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .hero-divider span { color: var(--gold); font-size: 1rem; }
+
+    /* archetype banner */
+    .archetype-banner {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 12px 28px;
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--gold-dim); border-radius: 6px;
+      margin-bottom: 28px;
+      box-shadow: 0 0 20px rgba(200,146,42,.15);
+    }
+    .arch-icon { font-size: 1.6rem; }
+    .arch-name {
+      font-family: 'Uncial Antiqua', serif;
+      color: var(--gold-hi); font-size: 1.05rem; letter-spacing: .06em;
+    }
+    .arch-desc { font-style: italic; color: var(--muted); font-size: .82rem; margin-top: 2px; }
+
+    /* JUT selector */
+    .jut-selector-wrap {
+      display: flex; flex-wrap: wrap; justify-content: center; gap: 8px;
+      margin: 0 auto 32px; max-width: 800px;
+    }
+    .jut-pill {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem; letter-spacing: .1em;
+      padding: 5px 14px;
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 20px;
+      color: var(--muted); cursor: pointer; transition: all .2s;
+      position: relative;
+    }
+    .jut-pill:hover { border-color: var(--gold-dim); color: var(--pale); }
+    .jut-pill.active {
+      border-color: var(--gold); color: var(--gold-hi);
+      box-shadow: 0 0 12px rgba(200,146,42,.25);
+      background: linear-gradient(145deg, #2a1e0a, #1a1206);
+    }
+    .jut-pill.absent {
+      border-style: dashed; opacity: .45; cursor: default;
+    }
+    .jut-pill.absent:hover { border-color: var(--fog); color: var(--muted); }
+
+    /* motivational tag */
+    .motiv-tag {
+      font-family: 'Crimson Pro', serif; font-style: italic;
+      font-size: 1.1rem; color: var(--gold);
+      margin-bottom: 28px; letter-spacing: .04em;
+      min-height: 1.5em;
+    }
+
+    /* ── SECTIONS ── */
+    .section { margin-top: 56px; scroll-margin-top: 70px; }
+    .section-title {
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(1rem, 2.5vw, 1.45rem);
+      color: var(--gold); letter-spacing: .05em;
+      border-left: 3px solid var(--gold-dim); padding-left: 14px;
+      margin-bottom: 6px;
+      text-shadow: 0 0 18px rgba(200,146,42,.25);
+    }
+    .section-sub {
+      font-style: italic; color: var(--muted); font-size: .88rem;
+      padding-left: 17px; margin-bottom: 18px; letter-spacing: .03em;
+    }
+    .section-divider {
+      height: 1px; margin: 4px 0 20px;
+      background: linear-gradient(90deg, var(--gold-dim), transparent);
+    }
+
+    /* ── STAT CARDS ── */
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 12px; }
+    .card {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 18px 14px;
+      position: relative; overflow: hidden; transition: transform .2s, box-shadow .2s;
+    }
+    .card:hover { transform: translateY(-3px); box-shadow: 0 8px 28px rgba(0,0,0,.5); }
+    .card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .card.teal::before   { background: linear-gradient(90deg, transparent, var(--teal), transparent); }
+    .card.green::before  { background: linear-gradient(90deg, transparent, var(--green), transparent); }
+    .card.red::before    { background: linear-gradient(90deg, transparent, var(--red), transparent); }
+    .card.amber::before  { background: linear-gradient(90deg, transparent, var(--amber), transparent); }
+    .card.magenta::before{ background: linear-gradient(90deg, transparent, var(--magenta), transparent); }
+    .card-label { font-family: 'Share Tech Mono', monospace; color: var(--muted); font-size: .62rem; letter-spacing: .15em; text-transform: uppercase; }
+    .card-value { font-family: 'Uncial Antiqua', serif; font-size: 1.85rem; color: var(--gold-hi); margin: 5px 0 2px; line-height: 1; }
+    .card.teal   .card-value { color: var(--teal); }
+    .card.green  .card-value { color: var(--green); }
+    .card.red    .card-value { color: var(--red); }
+    .card.amber  .card-value { color: var(--amber); }
+    .card.magenta .card-value { color: var(--magenta); }
+    .card-note { font-style: italic; color: var(--muted); font-size: .76rem; }
+    .card-delta {
+      position: absolute; top: 10px; right: 12px;
+      font-family: 'Share Tech Mono', monospace; font-size: .65rem;
+    }
+    .delta-up   { color: var(--green); }
+    .delta-down { color: var(--red); }
+    .delta-flat { color: var(--muted); }
+
+    /* ── SUBJECT BARS ── */
+    .subj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+    .subj-card {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 20px;
+    }
+    .subj-card h4 {
+      font-family: 'Uncial Antiqua', serif; font-size: .92rem;
+      color: var(--gold); letter-spacing: .06em; margin-bottom: 14px;
+    }
+    .subj-row { display: flex; justify-content: space-between; align-items: center; margin: 7px 0; font-size: .82rem; }
+    .subj-row-label { color: var(--muted); }
+    .subj-row-val   { font-family: 'Share Tech Mono', monospace; color: var(--pale); }
+    .progress-wrap  { margin: 10px 0 4px; }
+    .progress-label { display: flex; justify-content: space-between; font-size: .72rem; color: var(--muted); margin-bottom: 4px; font-family: 'Share Tech Mono', monospace; }
+    .progress-bar   { height: 8px; background: var(--smoke); border-radius: 4px; overflow: hidden; border: 1px solid var(--fog); }
+    .progress-fill  { height: 100%; border-radius: 3px; transition: width .8s ease; box-shadow: 0 0 6px currentColor; }
+    .fill-gold    { background: var(--gold);    color: var(--gold); }
+    .fill-teal    { background: var(--teal);    color: var(--teal); }
+    .fill-green   { background: var(--green);   color: var(--green); }
+    .fill-red     { background: var(--red);     color: var(--red); }
+    .fill-amber   { background: var(--amber);   color: var(--amber); }
+    .fill-magenta { background: var(--magenta); color: var(--magenta); }
+
+    /* ── CHART CONTAINERS ── */
+    .chart-wrap {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 24px;
+      position: relative;
+    }
+    .chart-wrap canvas { max-height: 300px; }
+
+    /* ── FLEET COMPARE ── */
+    .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 14px; }
+    .fleet-card {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 18px;
+    }
+    .fleet-card-title {
+      font-family: 'Share Tech Mono', monospace; font-size: .65rem;
+      letter-spacing: .14em; color: var(--muted); text-transform: uppercase; margin-bottom: 10px;
+    }
+    .fleet-rank {
+      font-family: 'Uncial Antiqua', serif; font-size: 2.2rem; color: var(--gold-hi); line-height: 1;
+    }
+    .fleet-of { font-family: 'Share Tech Mono', monospace; font-size: .72rem; color: var(--muted); margin-top: 4px; }
+    .fleet-bar { margin-top: 10px; }
+
+    /* ── JUT HISTORY TABLE ── */
+    .table-wrap { overflow-x: auto; border-radius: 6px; border: 1px solid var(--fog); }
+    table { width: 100%; border-collapse: collapse; font-size: .78rem; font-family: 'Share Tech Mono', monospace; }
+    thead tr { background: #1a1208; }
+    th {
+      font-family: 'Crimson Pro', serif; font-style: italic;
+      font-size: .72rem; letter-spacing: .07em; color: var(--gold);
+      padding: 10px 12px; border-bottom: 1px solid var(--fog); text-align: left; white-space: nowrap;
+    }
+    td { padding: 8px 12px; border-bottom: 1px solid rgba(61,50,37,.4); white-space: nowrap; }
+    tr:last-child td { border-bottom: none; }
+    tbody tr { background: linear-gradient(145deg, #1e160a, #130e06); transition: background .15s; }
+    tbody tr:hover { background: #2a1e0e; }
+    tbody tr:nth-child(even) { background: rgba(26,18,8,.7); }
+    .num { text-align: right; }
+    .gold    { color: var(--gold-hi) !important; }
+    .teal    { color: var(--teal)    !important; }
+    .green   { color: var(--green)   !important; }
+    .red     { color: var(--red)     !important; }
+    .amber   { color: var(--amber)   !important; }
+    .magenta { color: var(--magenta) !important; }
+    .muted   { color: var(--muted)   !important; }
+
+    /* rank badge */
+    .rank-badge {
+      display: inline-block;
+      background: linear-gradient(135deg, #1e160a, #130e06);
+      border: 1px solid var(--gold-dim); padding: 2px 8px; border-radius: 3px;
+      color: var(--teal); font-size: .72rem;
+    }
+
+    /* badges */
+    .badge { display: inline-block; padding: 2px 9px; border-radius: 3px; font-size: .7rem; font-family: 'Share Tech Mono', monospace; }
+    .badge-red    { background: rgba(192,57,43,.15);  color: var(--red);    border: 1px solid var(--red); }
+    .badge-orange { background: rgba(230,126,34,.15); color: var(--orange); border: 1px solid var(--orange); }
+    .badge-yellow { background: rgba(240,184,64,.12); color: var(--gold-hi);border: 1px solid var(--gold-dim); }
+    .badge-green  { background: rgba(46,204,113,.12); color: var(--green);  border: 1px solid var(--green); }
+    .badge-teal   { background: rgba(92,184,178,.12); color: var(--teal);   border: 1px solid var(--teal); }
+
+    /* career bests */
+    .bests-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .best-card {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 16px;
+      display: flex; flex-direction: column; gap: 4px;
+    }
+    .best-label { font-family: 'Share Tech Mono', monospace; font-size: .62rem; letter-spacing: .14em; color: var(--muted); text-transform: uppercase; }
+    .best-val   { font-family: 'Uncial Antiqua', serif; font-size: 1.6rem; color: var(--gold-hi); }
+    .best-jut   { font-family: 'Share Tech Mono', monospace; font-size: .68rem; color: var(--gold-dim); }
+
+    /* streak */
+    .streak-wrap { display: flex; gap: 12px; flex-wrap: wrap; }
+    .streak-card {
+      flex: 1; min-width: 160px;
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 16px; text-align: center;
+    }
+    .streak-num  { font-family: 'Uncial Antiqua', serif; font-size: 2.4rem; }
+    .streak-label{ font-family: 'Share Tech Mono', monospace; font-size: .65rem; letter-spacing: .12em; color: var(--muted); margin-top: 4px; }
+
+    /* board vs jut */
+    .bvj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media(max-width:600px){ .bvj-grid { grid-template-columns: 1fr; } }
+    .bvj-card {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog); border-radius: 6px; padding: 20px;
+    }
+    .bvj-title { font-family: 'Uncial Antiqua', serif; font-size: .9rem; color: var(--gold); margin-bottom: 12px; }
+    .bvj-row { display: flex; justify-content: space-between; font-size: .82rem; padding: 5px 0; border-bottom: 1px solid var(--fog); }
+    .bvj-row:last-child { border-bottom: none; }
+
+    /* advice box */
+    .advice-box {
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--gold-dim); border-radius: 6px; padding: 22px 24px;
+      display: flex; flex-direction: column; gap: 12px;
+    }
+    .advice-item { font-size: 1rem; line-height: 1.6; }
+    .advice-item span { color: var(--gold-hi); font-style: italic; }
+
+    /* flags strip */
+    .flags-strip { display: flex; flex-wrap: wrap; gap: 8px; }
+    .flag-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 13px; border-radius: 20px; font-size: .72rem;
+      border: 1px solid var(--fog); background: linear-gradient(145deg, #1e160a, #130e06);
+      font-family: 'Crimson Pro', serif; font-style: italic;
+    }
+    .flag-chip.on  { border-color: var(--green);    color: var(--green); }
+    .flag-chip.warn{ border-color: var(--amber);    color: var(--amber); }
+    .flag-chip.bad { border-color: var(--red);      color: var(--red); }
+    .flag-chip.off { opacity: .35; }
+
+    /* footer */
+    footer {
+      text-align: center; padding: 38px 20px;
+      color: var(--muted); font-style: italic; font-size: .85rem;
+      border-top: 1px solid var(--fog); margin-top: 64px;
+      font-family: 'Crimson Pro', serif; letter-spacing: .05em;
+    }
+    .footer-skull { font-size: 1.2rem; opacity: .35; margin-bottom: 8px; }
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 5px; height: 5px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--fog); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+    /* responsive */
+    @media(max-width:600px) {
+      .cards { grid-template-columns: repeat(2, 1fr); }
+      .subj-grid { grid-template-columns: 1fr; }
+      .fleet-grid { grid-template-columns: 1fr 1fr; }
+    }
+
+    /* hidden */
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="rope-top"></div>
+<div class="embers" id="embers"></div>
+
+<!-- LOADING SCREEN -->
+<div id="loading">
+  <span class="load-skull">☠️</span>
+  <div class="load-text">Fetchin' yer scrolls from the archive...</div>
+  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+</div>
+
+<!-- MAIN PAGE -->
+<div id="main-content" class="hidden">
+
+  <nav class="top-nav" id="top-nav">
+    <a href="/">⚓ Home</a>
+    <a href="#overview">📊 Overview</a>
+    <a href="#subjects">🎯 Subjects</a>
+    <a href="#trend">📈 Trend</a>
+    <a href="#fleet">⚔️ Fleet</a>
+    <a href="#damage">💀 NM Damage</a>
+    <a href="#career">🏆 Career</a>
+    <a href="#board">📜 Board vs JUT</a>
+    <a href="#advice">🧭 Advice</a>
+  </nav>
+
+  <div class="page">
+
+    <!-- HERO -->
+    <div class="hero">
+      <span class="hero-skull">☠️</span>
+      <h1 class="hero-name" id="hero-name">—</h1>
+      <p class="hero-meta" id="hero-meta">—</p>
+      <div class="hero-divider"><span>⚓</span></div>
+
+      <div class="archetype-banner" id="arch-banner">
+        <span class="arch-icon" id="arch-icon">🧭</span>
+        <div>
+          <div class="arch-name" id="arch-name">—</div>
+          <div class="arch-desc" id="arch-desc">—</div>
+        </div>
+      </div>
+
+      <p class="motiv-tag" id="motiv-tag">—</p>
+
+      <!-- JUT pill selector -->
+      <div class="jut-selector-wrap" id="jut-pills"></div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div class="section" id="overview">
+      <div class="section-title">📊 Overview — This Exam</div>
+      <div class="section-sub">yer vital signs for the selected JUT</div>
+      <div class="section-divider"></div>
+      <div class="cards" id="overview-cards"></div>
+    </div>
+
+    <!-- SUBJECTS -->
+    <div class="section" id="subjects">
+      <div class="section-title">🎯 Subject Breakdown</div>
+      <div class="section-sub">Physics · Chemistry · Maths — marks, accuracy, attempts</div>
+      <div class="section-divider"></div>
+      <div class="subj-grid" id="subj-grid"></div>
+    </div>
+
+    <!-- TREND -->
+    <div class="section" id="trend">
+      <div class="section-title">📈 Score Journey Across JUTs</div>
+      <div class="section-sub">yer voyage through every exam — absent ones marked with ✕</div>
+      <div class="section-divider"></div>
+      <div class="chart-wrap" id="trend-chart-wrap">
+        <canvas id="score-chart"></canvas>
+      </div>
+      <div style="margin-top:16px">
+        <div class="chart-wrap">
+          <canvas id="subj-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- FLEET COMPARISONS -->
+    <div class="section" id="fleet">
+      <div class="section-title">⚔️ Fleet Comparisons</div>
+      <div class="section-sub">how ye rank among yer peers — overall, gender, mentor, class</div>
+      <div class="section-divider"></div>
+      <div class="fleet-grid" id="fleet-grid"></div>
+    </div>
+
+    <!-- NM DAMAGE -->
+    <div class="section" id="damage">
+      <div class="section-title">💀 Negative Marking Damage</div>
+      <div class="section-sub">every wrong answer cost ye 1 mark — here's the toll</div>
+      <div class="section-divider"></div>
+      <div class="cards" id="damage-cards"></div>
+      <div style="margin-top:16px">
+        <div class="chart-wrap">
+          <canvas id="nm-chart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- CAREER BESTS -->
+    <div class="section" id="career">
+      <div class="section-title">🏆 Career Statistics</div>
+      <div class="section-sub">yer legacy across all JUTs sailed so far</div>
+      <div class="section-divider"></div>
+      <div class="bests-grid" id="career-bests"></div>
+      <div style="margin-top:20px">
+        <div class="streak-wrap" id="streak-wrap"></div>
+      </div>
+      <div style="margin-top:20px">
+        <div class="table-wrap">
+          <table id="history-table">
+            <thead>
+              <tr>
+                <th>JUT</th><th>Status</th>
+                <th class="num">Score</th><th class="num">/ 300</th>
+                <th class="num">Rank</th><th class="num">Percentile</th>
+                <th class="num">Phy</th><th class="num">Chem</th><th class="num">Math</th>
+                <th class="num">Accuracy</th><th class="num">Wrong</th>
+                <th>Trend</th><th>Archetype</th>
+              </tr>
+            </thead>
+            <tbody id="history-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- BOARD vs JUT -->
+    <div class="section" id="board">
+      <div class="section-title">📜 Board vs JUT Performance</div>
+      <div class="section-sub">how yer school marks stack up against yer JUT accuracy</div>
+      <div class="section-divider"></div>
+      <div class="bvj-grid" id="bvj-grid"></div>
+    </div>
+
+    <!-- ADVICE -->
+    <div class="section" id="advice">
+      <div class="section-title">🧭 The Oracle Speaks</div>
+      <div class="section-sub">strength, weakness, and the path forward</div>
+      <div class="section-divider"></div>
+      <div class="advice-box" id="advice-box"></div>
+      <div style="margin-top:20px">
+        <div class="section-title" style="font-size:1rem;margin-bottom:12px">⚑ Exam Flags</div>
+        <div class="flags-strip" id="flags-strip"></div>
+      </div>
+    </div>
+
+  </div><!-- .page -->
+
+  <footer>
+    <div class="footer-skull">☠ &nbsp; ⚓ &nbsp; ☠</div>
+    🏴‍☠️ &nbsp; FireWave JUT Reports &nbsp; · &nbsp; results.firewave.in &nbsp; · &nbsp; Chart yer course, Captain 🏴‍☠️
+  </footer>
+
+</div><!-- #main-content -->
+
+<script>
+// ─────────────────────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────────────────────
+const q  = s => document.querySelector(s);
+const qq = s => document.querySelectorAll(s);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if(cls) e.className=cls; if(html!==undefined) e.innerHTML=html; return e; };
+
+function parseNum(v)  { const n = parseFloat(v); return isNaN(n) ? null : n; }
+function parseInt2(v) { const n = parseInt(v);   return isNaN(n) ? null : n; }
+
+function deltaClass(v) {
+  if (v === null || v === '' || v === undefined) return 'delta-flat';
+  const n = parseFloat(v);
+  if (isNaN(n) || n === 0) return 'delta-flat';
+  return n > 0 ? 'delta-up' : 'delta-down';
+}
+function deltaStr(v, prefix='') {
+  if (v === null || v === '' || v === undefined) return '';
+  const n = parseFloat(v);
+  if (isNaN(n) || n === 0) return '→0';
+  return (n > 0 ? '↑' : '↓') + prefix + Math.abs(n);
+}
+
+function hbar(val, max, color, height=8) {
+  const w = Math.min(100, max > 0 ? (val/max*100) : 0).toFixed(1);
+  return `<div style="background:#1a1208;border-radius:3px;height:${height}px;overflow:hidden;border:1px solid #3d3225;">
+    <div style="width:${w}%;height:100%;background:${color};border-radius:2px;transition:width .8s ease;box-shadow:0 0 6px ${color}55;"></div>
+  </div>`;
+}
+
+function nmBadge(sev) {
+  const map = {
+    'CATASTROPHIC': 'badge-red',
+    'SEVERE':       'badge-orange',
+    'MODERATE':     'badge-yellow',
+    'CONTROLLED':   'badge-green',
+  };
+  return `<span class="badge ${map[sev]||'badge-teal'}">${sev||'—'}</span>`;
+}
+
+function trendEmoji(t) {
+  return {RISING:'📈',FALLING:'📉',STABLE:'➡️',DEBUT:'🆕'}[t] || '➡️';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  LOAD BAR ANIMATION
+// ─────────────────────────────────────────────────────────────
+let loadPct = 0;
+const loadBar = q('#load-bar');
+function advanceLoad(to) {
+  loadPct = to;
+  if(loadBar) loadBar.style.width = to + '%';
+}
+
+// ─────────────────────────────────────────────────────────────
+//  CHART DEFAULTS (pirate palette)
+// ─────────────────────────────────────────────────────────────
+Chart.defaults.color          = '#7a6a50';
+Chart.defaults.borderColor    = '#3d3225';
+Chart.defaults.font.family    = "'Share Tech Mono', monospace";
+Chart.defaults.font.size      = 11;
+
+const CHART_COLORS = {
+  gold:    '#f0b840',
+  teal:    '#5cb8b2',
+  green:   '#2ecc71',
+  red:     '#c0392b',
+  amber:   '#e8a020',
+  magenta: '#c05ca0',
+  muted:   '#7a6a50',
+};
+
+let scoreChart = null;
+let subjChart  = null;
+let nmChart    = null;
+
+// ─────────────────────────────────────────────────────────────
+//  MAIN
+// ─────────────────────────────────────────────────────────────
+const params  = new URLSearchParams(window.location.search);
+const STUDENT = params.get('student') || '';
+
+if (!STUDENT) {
+  window.location.href = '404.html';
+}
+
+advanceLoad(10);
+
+Papa.parse('./jut_student_reports.csv', {
+  header: true,
+  download: true,
+  skipEmptyLines: true,
+  complete(results) {
+    advanceLoad(70);
+    const allRows = results.data;
+
+    // Filter to this student
+    const rows = allRows.filter(r => String(r.phone||'').trim() === STUDENT);
+
+    if (!rows.length) {
+      window.location.href = '404.html';
+      return;
+    }
+
+    advanceLoad(90);
+
+    // Sort by jut_number
+    rows.sort((a,b) => (parseInt2(a.jut_number)||0) - (parseInt2(b.jut_number)||0));
+
+    // Separate present / absent
+    const presentRows = rows.filter(r => String(r.absent) !== '1');
+    const allJutIds   = rows.map(r => r.jut_id);
+
+    // Default to latest present JUT
+    let activeJut = presentRows.length ? presentRows[presentRows.length-1].jut_id : allJutIds[allJutIds.length-1];
+
+    function getRow(jid) { return rows.find(r => r.jut_id === jid) || {}; }
+
+    // ── Identity from first present row
+    const base = presentRows[0] || rows[0];
+
+    q('#hero-name').textContent = base.name || 'Unknown Sailor';
+    document.title = `${base.name || 'Sailor'} — FireWave JUT`;
+    q('#hero-meta').textContent =
+      [base.gender ? base.gender.charAt(0)+base.gender.slice(1).toLowerCase() : null,
+       base.class ? `Class ${base.class}` : null,
+       base.mentor ? `Mentor: ${base.mentor}` : null,
+       base.blood_group || null,
+       base.age ? `Age ${base.age}` : null
+      ].filter(Boolean).join('  ·  ');
+
+    advanceLoad(100);
+    setTimeout(() => {
+      q('#loading').style.opacity = '0';
+      q('#loading').style.transition = 'opacity .4s';
+      setTimeout(() => { q('#loading').classList.add('hidden'); q('#main-content').classList.remove('hidden'); }, 400);
+      setTimeout(() => render(activeJut), 450);
+    }, 300);
+
+    // ── BUILD JUT PILLS
+    function buildPills() {
+      const wrap = q('#jut-pills');
+      wrap.innerHTML = '';
+      rows.forEach(r => {
+        const pill = el('button', 'jut-pill' + (r.absent==='1' ? ' absent' : '') + (r.jut_id===activeJut ? ' active' : ''));
+        pill.textContent = r.jut_id.toUpperCase() + (r.absent==='1' ? ' ✕' : '');
+        pill.title = r.absent==='1' ? 'Absent' : `Score: ${r.score}`;
+        if (r.absent !== '1') {
+          pill.onclick = () => { activeJut = r.jut_id; buildPills(); render(activeJut); };
+        }
+        wrap.appendChild(pill);
+      });
+    }
+    buildPills();
+
+    // ─────────────────────────────────────────────────────────
+    //  RENDER — called on each JUT switch
+    // ─────────────────────────────────────────────────────────
+    function render(jid) {
+      const r = getRow(jid);
+      if (!r || r.absent === '1') return;
+
+      // ── Archetype
+      q('#arch-icon').textContent = r.archetype_icon || '🧭';
+      q('#arch-name').textContent = r.archetype_name || '—';
+      q('#arch-desc').textContent = r.archetype_desc || '—';
+      q('#motiv-tag').textContent = r.motivational_tag || '';
+
+      // ── Overview cards
+      const oc = q('#overview-cards');
+      oc.innerHTML = '';
+      const overviewCards = [
+        { label:'Score',       val: r.score,        note: r.score_vs_max,      cls:'',       delta: r.score_vs_prev },
+        { label:'Rank',        val: `#${r.rank}`,   note: r.rank_title,        cls:'teal',   delta: r.rank_vs_prev ? -parseFloat(r.rank_vs_prev) : null },
+        { label:'Percentile',  val: r.top_x_pct,    note: r.standing,          cls:'amber',  delta: null },
+        { label:'Accuracy',    val: `${parseNum(r.overall_acc)||0}%`, note:`${r.total_correct} correct of ${r.total_att} tried`, cls:'', delta: r.acc_vs_prev },
+        { label:'Efficiency',  val: r.efficiency,   note:'marks per attempt',  cls:'',       delta: null },
+        { label:'Peer Beat',   val: r.peer_beat_count?.split(' ')[1]||'—', note: r.peer_beat_count, cls:'green', delta: null },
+        { label:'Marks Left',  val: r.marks_left_total, note:`${r.unattempted_total} Qs unattempted`, cls:'amber', delta: null },
+        { label:'Potential',   val: r.potential_score,  note:`${r.potential_score_pct}% if all correct`, cls:'', delta: null },
+      ];
+      overviewCards.forEach(c => {
+        const card = el('div', `card ${c.cls}`);
+        const dv = c.delta !== null && c.delta !== undefined && c.delta !== '' ? parseFloat(c.delta) : null;
+        const deltaHTML = dv !== null && !isNaN(dv) && dv !== 0
+          ? `<span class="card-delta ${dv>0?'delta-up':'delta-down'}">${dv>0?'↑':'↓'}${Math.abs(dv)}</span>` : '';
+        card.innerHTML = `
+          ${deltaHTML}
+          <div class="card-label">${c.label}</div>
+          <div class="card-value">${c.val||'—'}</div>
+          <div class="card-note">${c.note||''}</div>`;
+        oc.appendChild(card);
+      });
+
+      // ── Subject cards
+      const sg = q('#subj-grid');
+      sg.innerHTML = '';
+      const subjects = [
+        { name:'⚛️ Physics',   marks: r.phy_marks,  pct: r.phy_score_pct,  acc: r.phy_acc,  att: r.phy_attempt,  cor: r.phy_correct,  wrong: r.phy_wrong,  lost: r.phy_marks_lost,  eff: r.phy_efficiency,  unattp: r.unattempted_phy,  mleft: r.marks_left_phy,  best: r.phy_best_ever,  avg: r.avg_phy_so_far,  trend: r.phy_trend,  vs_max: r.phy_score_vs_max, fill:'fill-teal',   col:'var(--teal)' },
+        { name:'🧪 Chemistry', marks: r.chem_marks, pct: r.chem_score_pct, acc: r.chem_acc, att: r.chem_attempt, cor: r.chem_correct, wrong: r.chem_wrong, lost: r.chem_marks_lost, eff: r.chem_efficiency, unattp: r.unattempted_chem, mleft: r.marks_left_chem, best: r.chem_best_ever, avg: r.avg_chem_so_far, trend: r.chem_trend, vs_max: r.chem_score_vs_max,fill:'fill-gold',   col:'var(--gold)' },
+        { name:'📐 Maths',     marks: r.math_marks, pct: r.math_score_pct, acc: r.math_acc, att: r.math_attempt, cor: r.math_correct, wrong: r.math_wrong, lost: r.math_marks_lost, eff: r.math_efficiency, unattp: r.unattempted_math, mleft: r.marks_left_math, best: r.math_best_ever, avg: r.avg_math_so_far, trend: r.math_trend, vs_max: r.math_score_vs_max,fill:'fill-amber',  col:'var(--amber)' },
+      ];
+
+      subjects.forEach(s => {
+        const marksNum = parseNum(s.marks) || 0;
+        const accNum   = parseNum(s.acc)   || 0;
+        const pctNum   = parseNum(s.pct)   || 0;
+        const card = el('div','subj-card');
+        card.innerHTML = `
+          <h4>${s.name} &nbsp; <small style="font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--muted)">${trendEmoji(s.trend)} ${s.trend||''}</small></h4>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Score</span><span>${s.vs_max}</span></div>
+            <div class="progress-bar"><div class="progress-fill ${s.fill}" style="width:${Math.max(0,pctNum)}%"></div></div>
+          </div>
+          <div class="progress-wrap">
+            <div class="progress-label"><span>Accuracy</span><span>${accNum}%</span></div>
+            <div class="progress-bar"><div class="progress-fill ${s.fill}" style="width:${Math.max(0,accNum)}%"></div></div>
+          </div>
+          <div class="subj-row"><span class="subj-row-label">Attempted</span><span class="subj-row-val">${s.att} / 25</span></div>
+          <div class="subj-row"><span class="subj-row-label">Correct</span><span class="subj-row-val green">${s.cor}</span></div>
+          <div class="subj-row"><span class="subj-row-label">Wrong</span><span class="subj-row-val red">${s.wrong}</span></div>
+          <div class="subj-row"><span class="subj-row-label">Marks Lost</span><span class="subj-row-val red">-${s.lost}</span></div>
+          <div class="subj-row"><span class="subj-row-label">Efficiency</span><span class="subj-row-val amber">${s.eff}</span></div>
+          <div class="subj-row"><span class="subj-row-label">Unattempted</span><span class="subj-row-val muted">${s.unattp} Qs (${s.mleft} marks left)</span></div>
+          <div class="subj-row"><span class="subj-row-label">Career Best</span><span class="subj-row-val gold">${s.best}</span></div>
+          <div class="subj-row"><span class="subj-row-label">Career Avg</span><span class="subj-row-val">${s.avg}</span></div>`;
+        sg.appendChild(card);
+      });
+
+      // ── Score trend chart
+      const labels  = rows.map(r => r.jut_id.toUpperCase());
+      const scores  = rows.map(r => r.absent==='1' ? null : parseNum(r.score));
+      const phyArr  = rows.map(r => r.absent==='1' ? null : parseNum(r.phy_marks));
+      const chemArr = rows.map(r => r.absent==='1' ? null : parseNum(r.chem_marks));
+      const mathArr = rows.map(r => r.absent==='1' ? null : parseNum(r.math_marks));
+      const avgArr  = rows.map(r => r.absent==='1' ? null : parseNum(r.avg_score_so_far));
+
+      if (scoreChart) scoreChart.destroy();
+      scoreChart = new Chart(q('#score-chart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: 'Score',
+              data: scores,
+              borderColor: CHART_COLORS.gold,
+              backgroundColor: 'rgba(240,184,64,.08)',
+              borderWidth: 2.5,
+              pointBackgroundColor: CHART_COLORS.gold,
+              pointRadius: 5,
+              pointHoverRadius: 7,
+              tension: .35, fill: true, spanGaps: false,
+            },
+            {
+              label: 'Running Avg',
+              data: avgArr,
+              borderColor: CHART_COLORS.muted,
+              borderDash: [5,4],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              tension: .35, fill: false, spanGaps: true,
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { color: '#7a6a50', boxWidth: 12 } },
+            title: { display: true, text: 'Score Journey', color: '#c8922a', font: { size: 13 } },
+            tooltip: {
+              callbacks: {
+                label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y ?? 'Absent'),
+              }
+            }
+          },
+          scales: {
+            x: { grid: { color: '#2a2218' }, ticks: { color: '#7a6a50' } },
+            y: { grid: { color: '#2a2218' }, ticks: { color: '#7a6a50' }, min: 0, max: 300,
+                 title: { display: true, text: 'Score / 300', color: '#7a6a50' } }
+          }
+        }
+      });
+
+      if (subjChart) subjChart.destroy();
+      subjChart = new Chart(q('#subj-chart'), {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            { label:'Physics',   data:phyArr,  borderColor:CHART_COLORS.teal,    backgroundColor:'rgba(92,184,178,.06)',  borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:false },
+            { label:'Chemistry', data:chemArr, borderColor:CHART_COLORS.gold,    backgroundColor:'rgba(240,184,64,.06)',  borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:false },
+            { label:'Maths',     data:mathArr, borderColor:CHART_COLORS.amber,   backgroundColor:'rgba(232,160,32,.06)',  borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:false },
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { color: '#7a6a50', boxWidth: 12 } },
+            title: { display: true, text: 'Subject Marks Journey', color: '#c8922a', font: { size: 13 } },
+          },
+          scales: {
+            x: { grid: { color: '#2a2218' }, ticks: { color: '#7a6a50' } },
+            y: { grid: { color: '#2a2218' }, ticks: { color: '#7a6a50' }, min: -10, max: 100,
+                 title: { display: true, text: 'Marks / 100', color: '#7a6a50' } }
+          }
+        }
+      });
+
+      // ── Fleet comparisons
+      const fg = q('#fleet-grid');
+      fg.innerHTML = '';
+      const fleetItems = [
+        { label:'Overall Rank',         rank: r.rank,        of: r.fleet_size,         col: CHART_COLORS.gold },
+        { label:`${r.gender||'Gender'} Rank`, rank: r.gender_rank, of: r.gender_fleet_size,  col: CHART_COLORS.magenta },
+        { label:'Mentor Group Rank',    rank: r.mentor_rank, of: r.mentor_fleet_size,  col: CHART_COLORS.teal },
+        { label:'Class Rank',           rank: r.class_rank,  of: r.class_fleet_size,   col: CHART_COLORS.amber },
+      ];
+      fleetItems.forEach(f => {
+        const rk = parseInt2(f.rank); const of_ = parseInt2(f.of);
+        const pct_ = (rk && of_) ? Math.max(0, 100 - ((rk-1)/of_*100)) : 0;
+        const card = el('div','fleet-card');
+        card.innerHTML = `
+          <div class="fleet-card-title">${f.label}</div>
+          <div class="fleet-rank" style="color:${f.col}">#${rk||'—'}</div>
+          <div class="fleet-of">of ${of_||'—'} sailors</div>
+          <div class="fleet-bar">${hbar(pct_, 100, f.col, 6)}</div>`;
+        fg.appendChild(card);
+      });
+
+      // Gap cards
+      const gapCards = [
+        { label:'Gap to Topper',     val: r.gap_to_topper,    note:'marks behind #1',      cls:'red'   },
+        { label:'Gap to Median',     val: (parseNum(r.gap_to_median)>=0?'+':'')+r.gap_to_median, note:'vs fleet median', cls:'' },
+        { label:'Gap to Fleet Avg',  val: (parseNum(r.gap_to_fleet_mean)>=0?'+':'')+r.gap_to_fleet_mean, note:'vs fleet average', cls:'' },
+        { label:'Gender Rank Title', val: r.gender_rank_title?.split(' ').slice(1).join(' ')||'—', note: r.gender_rank_title?.split(' ')[0]||'', cls:'magenta' },
+      ];
+      gapCards.forEach(c => {
+        const card = el('div',`card ${c.cls}`);
+        card.innerHTML = `<div class="card-label">${c.label}</div><div class="card-value" style="font-size:1.3rem">${c.val||'—'}</div><div class="card-note">${c.note}</div>`;
+        fg.appendChild(card);
+      });
+
+      // ── NM Damage cards
+      const dc = q('#damage-cards');
+      dc.innerHTML = '';
+      const dmgCards = [
+        { label:'Total Wrong',    val: r.total_wrong,   note:`-${r.marks_lost} marks total`, cls:'red' },
+        { label:'Gross Score',    val: r.gross_score,   note:'if no negatives',               cls:'' },
+        { label:'Damage %',       val: `${parseNum(r.damage_pct)||0}%`, note: r.nm_severity,   cls: (parseNum(r.damage_pct)||0)>=20?'red':(parseNum(r.damage_pct)||0)>=10?'amber':'green' },
+        { label:'Physics Wrong',  val: r.phy_wrong,     note:`-${r.phy_marks_lost} marks`,    cls:'' },
+        { label:'Chem Wrong',     val: r.chem_wrong,    note:`-${r.chem_marks_lost} marks`,   cls:'' },
+        { label:'Maths Wrong',    val: r.math_wrong,    note:`-${r.math_marks_lost} marks`,   cls:'' },
+      ];
+      dmgCards.forEach(c => {
+        const card = el('div',`card ${c.cls}`);
+        card.innerHTML = `<div class="card-label">${c.label}</div><div class="card-value">${c.val||0}</div><div class="card-note">${c.note}</div>`;
+        dc.appendChild(card);
+      });
+
+      // NM bar chart (per subject)
+      if (nmChart) nmChart.destroy();
+      nmChart = new Chart(q('#nm-chart'), {
+        type: 'bar',
+        data: {
+          labels: ['Physics','Chemistry','Maths'],
+          datasets: [
+            { label:'Correct',  data:[parseNum(r.phy_correct)||0,  parseNum(r.chem_correct)||0,  parseNum(r.math_correct)||0],  backgroundColor:'rgba(46,204,113,.6)',  borderColor:CHART_COLORS.green,  borderWidth:1 },
+            { label:'Wrong',    data:[parseNum(r.phy_wrong)||0,    parseNum(r.chem_wrong)||0,    parseNum(r.math_wrong)||0],    backgroundColor:'rgba(192,57,43,.6)',   borderColor:CHART_COLORS.red,    borderWidth:1 },
+            { label:'Skipped',  data:[parseNum(r.unattempted_phy)||0, parseNum(r.unattempted_chem)||0, parseNum(r.unattempted_math)||0], backgroundColor:'rgba(61,50,37,.6)', borderColor:'#3d3225', borderWidth:1 },
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: { labels: { color: '#7a6a50', boxWidth:12 } },
+            title:  { display: true, text: 'Attempt Breakdown per Subject', color: '#c8922a', font: { size: 13 } },
+          },
+          scales: {
+            x: { stacked: true, grid:{ color:'#2a2218' }, ticks:{ color:'#7a6a50' } },
+            y: { stacked: true, grid:{ color:'#2a2218' }, ticks:{ color:'#7a6a50' }, max:25 }
+          }
+        }
+      });
+
+      // ── Career bests
+      const cb = q('#career-bests');
+      cb.innerHTML = '';
+      const bests = [
+        { label:'Best Score Ever',    val: r.best_score_ever,  jut: r.best_score_jut  },
+        { label:'Worst Score Ever',   val: r.worst_score_ever, jut: r.worst_score_jut },
+        { label:'Best Rank Ever',     val: `#${r.best_rank_ever}`,  jut: r.best_rank_jut   },
+        { label:'Worst Rank Ever',    val: `#${r.worst_rank_ever}`, jut: r.worst_rank_jut  },
+        { label:'Avg Score So Far',   val: r.avg_score_so_far, jut: `${r.exams_appeared} exams` },
+        { label:'Score Consistency',  val: r.score_stdev_across_juts||'—', jut: r.consistency_rating },
+        { label:'Physics Best',       val: r.phy_best_ever,    jut: r.phy_best_jut    },
+        { label:'Chemistry Best',     val: r.chem_best_ever,   jut: r.chem_best_jut   },
+        { label:'Maths Best',         val: r.math_best_ever,   jut: r.math_best_jut   },
+        { label:'Exams Appeared',     val: r.exams_appeared,   jut: `${r.exams_absent} absent` },
+      ];
+      bests.forEach(b => {
+        const c = el('div','best-card');
+        c.innerHTML = `<div class="best-label">${b.label}</div><div class="best-val">${b.val||'—'}</div><div class="best-jut">${b.jut||''}</div>`;
+        cb.appendChild(c);
+      });
+
+      // Streak
+      const sw = q('#streak-wrap');
+      sw.innerHTML = '';
+      const streaks = [
+        { num: r.streak_improving, label:'Exam Improving Streak', col:'var(--green)'  },
+        { num: r.streak_declining, label:'Exam Declining Streak', col:'var(--red)'    },
+      ];
+      streaks.forEach(s => {
+        const c = el('div','streak-card');
+        c.innerHTML = `<div class="streak-num" style="color:${s.col}">${s.num||0}</div><div class="streak-label">${s.label}</div>`;
+        sw.appendChild(c);
+      });
+
+      // ── History table
+      const tbody = q('#history-tbody');
+      tbody.innerHTML = '';
+      rows.forEach(hr => {
+        const absent = hr.absent === '1';
+        const tr = el('tr');
+        const trendBadge = absent ? '' : `<span style="font-size:.85rem">${trendEmoji(hr.score_trend)}</span>`;
+        tr.innerHTML = `
+          <td class="gold">${hr.jut_id?.toUpperCase()}</td>
+          <td>${absent ? '<span class="badge badge-red">ABSENT</span>' : '<span class="badge badge-green">PRESENT</span>'}</td>
+          <td class="num gold">${absent ? '—' : hr.score}</td>
+          <td class="num muted">${absent ? '—' : '/300'}</td>
+          <td class="num"><span class="rank-badge">${absent ? '—' : '#'+hr.rank}</span></td>
+          <td class="num teal">${absent ? '—' : (hr.top_x_pct||'—')}</td>
+          <td class="num teal">${absent ? '—' : hr.phy_marks}</td>
+          <td class="num gold">${absent ? '—' : hr.chem_marks}</td>
+          <td class="num amber">${absent ? '—' : hr.math_marks}</td>
+          <td class="num">${absent ? '—' : (parseNum(hr.overall_acc)||0)+'%'}</td>
+          <td class="num red">${absent ? '—' : hr.total_wrong}</td>
+          <td>${absent ? '—' : trendBadge+' '+(hr.score_vs_prev!==''?(hr.score_vs_prev>0?'<span class="green">+':'<span class="red">')+hr.score_vs_prev+'</span>':'DEBUT')}</td>
+          <td style="font-size:.8rem">${absent ? '—' : (hr.archetype_icon||'')+' '+(hr.archetype_name||'')}</td>`;
+        tbody.appendChild(tr);
+      });
+
+      // ── Board vs JUT
+      const bvj = q('#bvj-grid');
+      bvj.innerHTML = '';
+      const bvjItems = [
+        {
+          title: '⚛️ Physics / Science',
+          rows: [
+            ['Board Science Marks', r.board_science_marks||'—'],
+            ['Board Science %',     r.board_science_pct   ? r.board_science_pct+'%' : '—'],
+            ['JUT Physics Acc',     (parseNum(r.phy_acc)||0)+'%'],
+            ['Verdict',             r.science_board_vs_jut||'—'],
+          ]
+        },
+        {
+          title: '📐 Maths',
+          rows: [
+            ['Board Maths Marks', r.board_math_marks||'—'],
+            ['Board Maths %',     r.board_math_pct    ? r.board_math_pct+'%' : '—'],
+            ['JUT Maths Acc',     (parseNum(r.math_acc)||0)+'%'],
+            ['Verdict',           r.math_board_vs_jut||'—'],
+          ]
+        }
+      ];
+      bvjItems.forEach(b => {
+        const card = el('div','bvj-card');
+        card.innerHTML = `<div class="bvj-title">${b.title}</div>` +
+          b.rows.map(([l,v]) => `<div class="bvj-row"><span>${l}</span><span class="gold">${v}</span></div>`).join('');
+        bvj.appendChild(card);
+      });
+
+      // board extra info
+      const boardInfo = el('div','bvj-card');
+      boardInfo.style.gridColumn = '1 / -1';
+      boardInfo.innerHTML = `
+        <div class="bvj-title">📋 Academic Profile</div>
+        ${[
+          ['Board',       r.board||'—'],
+          ['Medium',      r.medium||'—'],
+          ['Overall %',   r.board_total_pct ? r.board_total_pct+'%' : '—'],
+          ['Area of Interest', r.area_of_interest||'—'],
+        ].map(([l,v]) => `<div class="bvj-row"><span>${l}</span><span class="gold">${v}</span></div>`).join('')}`;
+      bvj.appendChild(boardInfo);
+
+      // ── Advice box
+      const ab = q('#advice-box');
+      ab.innerHTML = `
+        <div class="advice-item">💪 <span>Strength:</span> ${r.strength_line||'—'}</div>
+        <div class="advice-item">🎯 <span>Focus:</span> ${r.subject_advice||'—'}</div>
+        <div class="advice-item">⚓ <span>Risk Profile:</span> ${r.risk_profile||'—'}</div>
+        <div class="advice-item">📊 <span>Carry Subject:</span> ${r.carry_subject||'—'} (+${r.carry_gap||0} marks above average)</div>
+        <div class="advice-item">⚓ <span>Drag Subject:</span> ${r.drag_subject||'—'} (-${r.drag_gap||0} marks below average)</div>
+        <div class="advice-item">📐 <span>Consistency Index:</span> σ=${r.consistency_index||'—'} across subjects</div>`;
+
+      // ── Flags
+      const fs_ = q('#flags-strip');
+      fs_.innerHTML = '';
+      const flags = [
+        { label:'🏆 Personal Best',      on: r.personal_best_flag==='1',   cls:'on'   },
+        { label:'📈 Rank Improved',       on: r.rank_improved_flag==='1',   cls:'on'   },
+        { label:'✅ All Subjects +ve',    on: r.all_subjects_positive_flag==='1', cls:'on' },
+        { label:'📈 Improving Streak',    on: parseInt2(r.streak_improving)>=2,  cls:'on' },
+        { label:'⚠️ Personal Worst',     on: r.personal_worst_flag==='1',  cls:'warn' },
+        { label:'🔴 Negative Maths',      on: r.negative_math_flag==='1',   cls:'bad'  },
+        { label:'😴 Zero Math Attempts',  on: r.zero_math_attempt_flag==='1',cls:'bad' },
+        { label:'📉 Declining Streak',    on: parseInt2(r.streak_declining)>=2, cls:'bad' },
+        { label:'⭐ Top 10%',             on: r.top10_flag==='1',           cls:'on'   },
+        { label:'🎯 Full Attempt',        on: r.full_attempt_flag==='1',    cls:'on'   },
+      ];
+      flags.forEach(f => {
+        const chip = el('div',`flag-chip ${f.on ? f.cls : 'off'}`);
+        chip.textContent = f.label;
+        fs_.appendChild(chip);
+      });
+    }
+  },
+  error() { window.location.href = '404.html'; }
+});
+
+// ── EMBERS
+const ec = document.getElementById('embers');
+const cols = ['#f0b840','#e84c0e','#f0b840','#c8922a','#f0b840'];
+for (let i=0; i<24; i++) {
+  const e = document.createElement('div');
+  e.className = 'ember';
+  e.style.setProperty('--x',     `${Math.random()*100}%`);
+  e.style.setProperty('--dur',   `${(4+Math.random()*5).toFixed(1)}s`);
+  e.style.setProperty('--delay', `${(Math.random()*8).toFixed(1)}s`);
+  e.style.setProperty('--sw',    `${(Math.random()*2-1).toFixed(2)}`);
+  e.style.background = cols[Math.floor(Math.random()*cols.length)];
+  if (Math.random()>.72) { e.style.width='3px'; e.style.height='3px'; }
+  ec.appendChild(e);
+}
+</script>
+</body>
+</html>
