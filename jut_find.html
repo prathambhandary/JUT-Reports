@@ -1,0 +1,471 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Find Yer Report — FireWave</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+
+  <style>
+    :root {
+      --ink:      #0a0806;
+      --fog:      #3d3225;
+      --gold:     #c8922a;
+      --gold-hi:  #f0b840;
+      --gold-dim: #7a5518;
+      --ember:    #e84c0e;
+      --teal:     #5cb8b2;
+      --green:    #2ecc71;
+      --red:      #c0392b;
+      --pale:     #d4c4a0;
+      --muted:    #7a6a50;
+      --smoke:    #2a2218;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body { height: 100%; }
+
+    body {
+      background: var(--ink);
+      color: var(--pale);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* grain */
+    body::before {
+      content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 1000;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      opacity: .45;
+    }
+
+    /* sea */
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: -1;
+      background:
+        radial-gradient(ellipse 120% 55% at 50% 100%, #0a1f2e 0%, transparent 65%),
+        linear-gradient(180deg, #0a0806 0%, #0d0b07 55%, #081520 100%);
+    }
+
+    /* rope */
+    .rope-top {
+      position: fixed; top: 0; left: 0; right: 0; height: 6px; z-index: 200;
+      background: repeating-linear-gradient(90deg,
+        var(--gold-dim) 0px, var(--gold) 4px,
+        var(--gold-dim) 8px, #5a3e10 12px,
+        var(--gold-dim) 16px);
+      box-shadow: 0 2px 14px rgba(200,146,42,.35);
+    }
+
+    /* embers */
+    .embers { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .ember {
+      position: absolute; width: 2px; height: 2px; border-radius: 50%;
+      background: var(--gold-hi); opacity: 0;
+      left: var(--x); bottom: -4px;
+      animation: rise var(--dur) ease-in infinite var(--delay);
+    }
+    @keyframes rise {
+      0%   { opacity: 0; transform: translateY(0) scale(1); }
+      10%  { opacity: .8; }
+      80%  { opacity: .2; }
+      100% { opacity: 0; transform: translateY(-88vh) translateX(calc(var(--sw)*28px)) scale(.1); }
+    }
+
+    /* card */
+    .search-card {
+      position: relative; z-index: 2;
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--fog);
+      border-radius: 8px;
+      padding: 44px 40px 40px;
+      width: 100%; max-width: 480px;
+      margin: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,.6);
+    }
+    .search-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      border-radius: 8px 8px 0 0;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+
+    /* skull */
+    .skull {
+      font-size: 2.6rem; display: block; text-align: center; margin-bottom: 14px;
+      filter: drop-shadow(0 0 18px rgba(240,184,64,.5));
+      animation: bob 3s ease-in-out infinite;
+    }
+    @keyframes bob {
+      0%,100% { transform: translateY(0) rotate(-3deg); }
+      50%      { transform: translateY(-8px) rotate(3deg); }
+    }
+
+    h1 {
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(1.4rem, 4vw, 2rem);
+      color: var(--gold-hi);
+      text-align: center;
+      letter-spacing: .05em;
+      text-shadow: 0 0 24px rgba(240,184,64,.35), 0 2px 0 #3a2000;
+      margin-bottom: 6px;
+    }
+
+    .subtitle {
+      font-style: italic; color: var(--muted);
+      text-align: center; font-size: .92rem;
+      margin-bottom: 30px; letter-spacing: .04em;
+    }
+
+    /* divider */
+    .divider {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+    }
+    .divider::before, .divider::after {
+      content: ''; flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .divider span { color: var(--gold); font-size: .9rem; }
+
+    /* input */
+    .input-wrap { position: relative; margin-bottom: 14px; }
+    .input-wrap input {
+      width: 100%;
+      background: #0d0b07;
+      border: 1px solid var(--fog);
+      border-radius: 5px;
+      padding: 13px 16px 13px 42px;
+      color: var(--pale);
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .92rem;
+      letter-spacing: .06em;
+      outline: none;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .input-wrap input::placeholder { color: var(--muted); }
+    .input-wrap input:focus {
+      border-color: var(--gold-dim);
+      box-shadow: 0 0 14px rgba(200,146,42,.18);
+    }
+    .input-icon {
+      position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
+      font-size: .95rem; pointer-events: none; color: var(--gold-dim);
+    }
+
+    /* results dropdown */
+    .results-drop {
+      position: absolute; top: calc(100% + 4px); left: 0; right: 0;
+      background: #130e06;
+      border: 1px solid var(--fog);
+      border-radius: 5px;
+      overflow: hidden;
+      z-index: 50;
+      max-height: 240px;
+      overflow-y: auto;
+      display: none;
+      box-shadow: 0 8px 28px rgba(0,0,0,.6);
+    }
+    .results-drop.open { display: block; }
+    .result-item {
+      padding: 11px 16px;
+      cursor: pointer;
+      border-bottom: 1px solid rgba(61,50,37,.4);
+      transition: background .15s;
+      display: flex; flex-direction: column; gap: 2px;
+    }
+    .result-item:last-child { border-bottom: none; }
+    .result-item:hover { background: #1e160a; }
+    .result-name {
+      font-family: 'Crimson Pro', serif;
+      font-size: .95rem; color: var(--pale);
+    }
+    .result-meta {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .65rem; color: var(--muted); letter-spacing: .08em;
+    }
+    .result-score {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem; color: var(--gold-dim);
+    }
+    .result-item:hover .result-name { color: var(--gold-hi); }
+
+    /* btn */
+    .btn-search {
+      width: 100%;
+      padding: 13px;
+      background: linear-gradient(145deg, #2a1e0a, #1a1206);
+      border: 1px solid var(--gold-dim);
+      border-radius: 5px;
+      color: var(--gold-hi);
+      font-family: 'Uncial Antiqua', serif;
+      font-size: .95rem;
+      letter-spacing: .07em;
+      cursor: pointer;
+      transition: all .22s;
+      margin-top: 6px;
+    }
+    .btn-search:hover {
+      border-color: var(--gold);
+      box-shadow: 0 0 18px rgba(200,146,42,.28);
+      transform: translateY(-2px);
+    }
+    .btn-search:active { transform: translateY(0) scale(.97); }
+    .btn-search:disabled { opacity: .4; cursor: not-allowed; transform: none; }
+
+    /* status */
+    .status {
+      text-align: center; margin-top: 16px;
+      font-style: italic; font-size: .88rem;
+      min-height: 1.4em;
+      transition: color .2s;
+    }
+    .status.loading { color: var(--muted); }
+    .status.error   { color: var(--red); }
+    .status.ok      { color: var(--green); }
+
+    /* home link */
+    .home-link {
+      display: block; text-align: center; margin-top: 24px;
+      font-family: 'Share Tech Mono', monospace;
+      font-size: .72rem; letter-spacing: .1em;
+      color: var(--muted); text-decoration: none;
+      transition: color .2s;
+    }
+    .home-link:hover { color: var(--gold); }
+
+    /* no results */
+    .no-results {
+      padding: 14px 16px;
+      font-style: italic; color: var(--muted); font-size: .88rem; text-align: center;
+    }
+
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: var(--ink); }
+    ::-webkit-scrollbar-thumb { background: var(--fog); border-radius: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="rope-top"></div>
+<div class="embers" id="embers"></div>
+
+<div class="search-card">
+  <span class="skull">☠️</span>
+  <h1>Find Yer Report</h1>
+  <p class="subtitle">Type yer name or phone number to retrieve yer scroll</p>
+
+  <div class="divider"><span>⚓</span></div>
+
+  <!-- Name search -->
+  <div class="input-wrap" id="name-wrap">
+    <span class="input-icon">⚓</span>
+    <input
+      type="text"
+      id="name-input"
+      placeholder="Type yer name..."
+      autocomplete="off"
+      spellcheck="false"
+    />
+    <div class="results-drop" id="name-results"></div>
+  </div>
+
+  <!-- Phone search -->
+  <div class="input-wrap">
+    <span class="input-icon">📱</span>
+    <input
+      type="tel"
+      id="phone-input"
+      placeholder="...or enter yer phone number"
+      autocomplete="off"
+      maxlength="10"
+    />
+  </div>
+
+  <button class="btn-search" id="btn-go" disabled>⚓ &nbsp; Chart My Course</button>
+
+  <div class="status loading" id="status">Fetchin' the crew manifest...</div>
+
+  <a class="home-link" href="/">← Back to Port</a>
+</div>
+
+<script>
+// ── data store
+let students = [];   // [ { phone, name, latestScore, latestRank, latestJut } ]
+let selectedPhone = null;
+
+// ── load CSV once
+Papa.parse('./student_reports.csv', {
+  header: true,
+  download: true,
+  skipEmptyLines: true,
+  complete(results) {
+    // Build unique student list with their latest present JUT stats
+    const map = {};
+    results.data.forEach(r => {
+      if (r.absent === '1') return;
+      const phone = (r.phone || '').trim();
+      if (!phone) return;
+      const jnum = parseInt(r.jut_number) || 0;
+      if (!map[phone] || jnum > map[phone].jnum) {
+        map[phone] = {
+          phone,
+          name:        r.name || 'Unknown',
+          latestScore: r.score || '—',
+          latestRank:  r.rank  || '—',
+          latestJut:   (r.jut_id || '').toUpperCase(),
+          gender:      r.gender || '',
+          mentor:      r.mentor || '',
+          jnum,
+        };
+      }
+    });
+    students = Object.values(map).sort((a,b) => a.name.localeCompare(b.name));
+    setStatus('', '');
+    q('#btn-go').disabled = true;
+  },
+  error() {
+    setStatus('Failed to load crew manifest — check CSV path.', 'error');
+  }
+});
+
+// ── helpers
+const q = s => document.querySelector(s);
+function setStatus(msg, cls) {
+  const el = q('#status');
+  el.textContent = msg;
+  el.className = 'status ' + cls;
+}
+
+// ── Name input — live search
+const nameInput   = q('#name-input');
+const nameDrop    = q('#name-results');
+const phoneInput  = q('#phone-input');
+const btnGo       = q('#btn-go');
+
+function showDrop(items) {
+  nameDrop.innerHTML = '';
+  if (!items.length) {
+    nameDrop.innerHTML = '<div class="no-results">No sailor found by that name...</div>';
+    nameDrop.classList.add('open');
+    return;
+  }
+  items.forEach(s => {
+    const div = document.createElement('div');
+    div.className = 'result-item';
+    div.innerHTML = `
+      <div class="result-name">${highlight(s.name, nameInput.value)}</div>
+      <div class="result-meta">${s.gender ? s.gender.charAt(0)+s.gender.slice(1).toLowerCase()+' · ' : ''}${s.mentor ? 'Mentor: '+s.mentor : ''}</div>
+      <div class="result-score">Latest: ${s.latestJut} · Score ${s.latestScore} · Rank #${s.latestRank}</div>`;
+    div.onclick = () => selectStudent(s);
+    nameDrop.appendChild(div);
+  });
+  nameDrop.classList.add('open');
+}
+
+function highlight(name, query) {
+  if (!query) return name;
+  const re = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')})`, 'gi');
+  return name.replace(re, '<span style="color:var(--gold-hi)">$1</span>');
+}
+
+function hideDrop() {
+  nameDrop.classList.remove('open');
+}
+
+function selectStudent(s) {
+  selectedPhone = s.phone;
+  nameInput.value = s.name;
+  phoneInput.value = s.phone;
+  hideDrop();
+  btnGo.disabled = false;
+  setStatus(`Found: ${s.name} — ready to sail!`, 'ok');
+}
+
+nameInput.addEventListener('input', () => {
+  const val = nameInput.value.trim();
+  selectedPhone = null;
+  phoneInput.value = '';
+  btnGo.disabled = true;
+  setStatus('', '');
+
+  if (val.length < 2) { hideDrop(); return; }
+
+  const matches = students.filter(s =>
+    s.name.toLowerCase().includes(val.toLowerCase())
+  ).slice(0, 8);
+
+  showDrop(matches);
+});
+
+nameInput.addEventListener('keydown', e => {
+  if (e.key === 'Escape') hideDrop();
+  if (e.key === 'Enter' && selectedPhone) go();
+});
+
+// close dropdown on outside click
+document.addEventListener('click', e => {
+  if (!q('#name-wrap').contains(e.target)) hideDrop();
+});
+
+// ── Phone input
+phoneInput.addEventListener('input', () => {
+  const val = phoneInput.value.trim();
+  selectedPhone = null;
+  nameInput.value = '';
+  btnGo.disabled = true;
+  setStatus('', '');
+
+  if (val.length < 10) return;
+
+  const match = students.find(s => s.phone === val);
+  if (match) {
+    selectStudent(match);
+  } else {
+    // phone not in students but might still be valid — allow direct lookup
+    selectedPhone = val;
+    btnGo.disabled = false;
+    setStatus('Phone entered — chartin\' course...', 'loading');
+  }
+});
+
+phoneInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') go();
+});
+
+// ── GO
+function go() {
+  if (!selectedPhone) return;
+  setStatus('Setting sail...', 'loading');
+  btnGo.disabled = true;
+  setTimeout(() => {
+    window.location.href = `report.html?student=${encodeURIComponent(selectedPhone)}`;
+  }, 300);
+}
+
+btnGo.addEventListener('click', go);
+
+// ── Embers
+const ec = document.getElementById('embers');
+const cols = ['#f0b840','#e84c0e','#f0b840','#c8922a'];
+for (let i = 0; i < 20; i++) {
+  const e = document.createElement('div');
+  e.className = 'ember';
+  e.style.setProperty('--x',     `${Math.random()*100}%`);
+  e.style.setProperty('--dur',   `${(4+Math.random()*5).toFixed(1)}s`);
+  e.style.setProperty('--delay', `${(Math.random()*8).toFixed(1)}s`);
+  e.style.setProperty('--sw',    `${(Math.random()*2-1).toFixed(2)}`);
+  e.style.background = cols[Math.floor(Math.random()*cols.length)];
+  if (Math.random() > .72) { e.style.width='3px'; e.style.height='3px'; }
+  ec.appendChild(e);
+}
+</script>
+</body>
+</html>
