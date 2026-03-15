@@ -138,6 +138,92 @@
       opacity: 0.85;
     }
 
+    /* ── REPORT BANNER ── */
+    .report-banner {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px; flex-wrap: wrap;
+      max-width: 680px;
+      margin: 32px auto 0;
+      padding: 18px 22px;
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--gold-dim);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--pale);
+      position: relative; overflow: hidden;
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+      animation: pulse-border 3s ease-in-out infinite;
+    }
+    @keyframes pulse-border {
+      0%,100% { box-shadow: 0 0 10px rgba(200,146,42,0.12); }
+      50%      { box-shadow: 0 0 24px rgba(200,146,42,0.32); }
+    }
+    .report-banner::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .report-banner::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(145deg, rgba(200,146,42,0.06), transparent);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .report-banner:hover {
+      transform: translateY(-3px);
+      border-color: var(--gold);
+      box-shadow: 0 0 32px rgba(200,146,42,0.3), 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .report-banner:hover::after { opacity: 1; }
+
+    .banner-left {
+      display: flex; align-items: center; gap: 14px; flex: 1;
+      position: relative; z-index: 1;
+    }
+    .banner-compass {
+      font-size: 2rem;
+      filter: drop-shadow(0 0 10px rgba(240,184,64,0.4));
+      animation: bob 3.5s ease-in-out infinite;
+      flex-shrink: 0;
+    }
+    .banner-title {
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+      color: var(--gold-bright);
+      letter-spacing: 0.05em;
+      margin-bottom: 4px;
+    }
+    .banner-sub {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: clamp(0.6rem, 1.3vw, 0.7rem);
+      color: var(--muted);
+      letter-spacing: 0.06em;
+      line-height: 1.5;
+    }
+    .banner-cta {
+      position: relative; z-index: 1;
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(0.72rem, 1.6vw, 0.85rem);
+      letter-spacing: 0.06em;
+      color: var(--gold-bright);
+      padding: 10px 20px;
+      border: 1px solid var(--gold-dim);
+      border-radius: 4px;
+      background: rgba(200,146,42,0.08);
+      white-space: nowrap;
+      flex-shrink: 0;
+      transition: all 0.22s;
+    }
+    .report-banner:hover .banner-cta {
+      border-color: var(--gold);
+      background: rgba(200,146,42,0.16);
+    }
+    @media(max-width: 520px) {
+      .report-banner { flex-direction: column; text-align: center; }
+      .banner-left   { flex-direction: column; }
+      .banner-cta    { width: 100%; text-align: center; }
+    }
+
     /* Section */
     .section-label {
       font-family: 'Uncial Antiqua', serif;
@@ -288,6 +374,18 @@
     <p class="intro-text">
       Welcome aboard, brave soul. Select yer examination below to retrieve yer results from the depths of the archive. Each scroll holds the fate of those who dared take the test.
     </p>
+
+    <!-- REPORT BANNER -->
+    <a href="search.html" class="report-banner">
+      <div class="banner-left">
+        <span class="banner-compass">🧭</span>
+        <div>
+          <div class="banner-title">Personalized Analysis</div>
+          <div class="banner-sub">Score trends &nbsp;·&nbsp; Archetypes &nbsp;·&nbsp; Career bests &nbsp;·&nbsp; Subject breakdown &nbsp;·&nbsp; Fleet rank — yer full voyage in one scroll</div>
+        </div>
+      </div>
+      <div class="banner-cta">⚔️ Find My Report</div>
+    </a>
   </header>
 
   <p class="section-label">⚔️ JUT Examinations</p>
