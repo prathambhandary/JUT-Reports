@@ -691,7 +691,7 @@ Papa.parse('./jut_student_results.csv', {
     const allRows = results.data;
 
     // Filter to this student
-    const rows = allRows.filter(r => String(r.phone||'').trim() === STUDENT);
+    const rows = allRows.filter(r => String(r.student_id||'').trim() === STUDENT);
 
     if (!rows.length) {
       window.location.href = '404.html';
