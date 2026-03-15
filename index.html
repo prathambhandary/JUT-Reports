@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FireWave Results — Chart Yer Course</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      --ink:        #0a0806;
+      --parchment:  #1a1208;
+      --deep:       #0d0b07;
+      --gold:       #c8922a;
+      --gold-bright:#f0b840;
+      --gold-dim:   #7a5518;
+      --rust:       #8b2e0a;
+      --ember:      #e84c0e;
+      --smoke:      #2a2218;
+      --fog:        #3d3225;
+      --pale:       #d4c4a0;
+      --muted:      #7a6a50;
+      --skull:      #e8dfc8;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background-color: var(--ink);
+      color: var(--pale);
+      font-family: 'Crimson Pro', Georgia, serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+      position: relative;
+    }
+
+    /* Grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 1000;
+      opacity: 0.5;
+    }
+
+    /* Sea background */
+    .sea-bg {
+      position: fixed; inset: 0;
+      background:
+        radial-gradient(ellipse 120% 60% at 50% 100%, #0a1f2e 0%, transparent 70%),
+        radial-gradient(ellipse 80% 40% at 80% 110%, #0d3348 0%, transparent 60%),
+        linear-gradient(180deg, #0a0806 0%, #0d0b07 60%, #081520 100%);
+      z-index: 0;
+    }
+
+    /* Rope border top */
+    .rope-top {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: 6px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--gold-dim) 0px, var(--gold) 4px,
+        var(--gold-dim) 8px, #5a3e10 12px,
+        var(--gold-dim) 16px
+      );
+      z-index: 100;
+      box-shadow: 0 2px 12px rgba(200,146,42,0.3);
+    }
+
+    .page {
+      position: relative; z-index: 2;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      padding: 72px 20px 40px;
+    }
+
+    .skull-icon {
+      font-size: 3.2rem;
+      display: block;
+      margin-bottom: 14px;
+      filter: drop-shadow(0 0 20px rgba(240,184,64,0.55));
+      animation: bob 3s ease-in-out infinite;
+    }
+    @keyframes bob {
+      0%,100% { transform: translateY(0) rotate(-3deg); }
+      50%      { transform: translateY(-9px) rotate(3deg); }
+    }
+
+    .site-name {
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(2rem, 6vw, 4.4rem);
+      color: var(--gold-bright);
+      letter-spacing: 0.04em;
+      text-shadow:
+        0 0 30px rgba(240,184,64,0.4),
+        0 2px 0 #3a2000,
+        0 4px 20px rgba(0,0,0,0.8);
+      line-height: 1.1;
+    }
+
+    .site-sub {
+      font-style: italic;
+      font-size: clamp(0.95rem, 2.2vw, 1.2rem);
+      color: var(--muted);
+      margin-top: 10px;
+      letter-spacing: 0.08em;
+    }
+
+    .divider {
+      display: flex; align-items: center; gap: 16px;
+      margin: 28px auto;
+      max-width: 500px;
+    }
+    .divider::before, .divider::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    }
+    .divider-icon { color: var(--gold); font-size: 1.2rem; }
+
+    .intro-text {
+      font-size: clamp(1rem, 2vw, 1.18rem);
+      color: var(--pale);
+      max-width: 620px;
+      margin: 0 auto;
+      line-height: 1.75;
+      opacity: 0.85;
+    }
+
+    /* Section */
+    .section-label {
+      font-family: 'Uncial Antiqua', serif;
+      font-size: clamp(1.2rem, 3vw, 1.75rem);
+      color: var(--gold);
+      text-align: center;
+      margin: 52px 0 8px;
+      letter-spacing: 0.06em;
+      text-shadow: 0 0 20px rgba(200,146,42,0.3);
+    }
+    .section-desc {
+      text-align: center;
+      font-style: italic;
+      color: var(--muted);
+      font-size: 1rem;
+      margin-bottom: 34px;
+    }
+
+    /* Grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(128px, 1fr));
+      gap: 12px;
+    }
+
+    /* Card */
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 5px;
+      padding: 20px 10px 16px;
+      background: linear-gradient(145deg, #1e160a, #130e06);
+      border: 1px solid var(--gold-dim);
+      border-radius: 6px;
+      text-decoration: none;
+      color: var(--pale);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(14px);
+      animation: fadein 0.4s forwards;
+      transition: transform 0.22s ease, border-color 0.22s ease, box-shadow 0.22s ease;
+    }
+    @keyframes fadein {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(145deg, rgba(200,146,42,0.08), transparent);
+      opacity: 0;
+      transition: opacity 0.25s;
+    }
+    .card:hover {
+      transform: translateY(-4px) scale(1.04);
+      border-color: var(--gold);
+      box-shadow:
+        0 0 22px rgba(200,146,42,0.28),
+        0 10px 28px rgba(0,0,0,0.65),
+        inset 0 0 14px rgba(200,146,42,0.06);
+    }
+    .card:hover::before { opacity: 1; }
+    .card:active { transform: translateY(0) scale(0.97); }
+
+    .card-anchor {
+      position: absolute;
+      top: 6px; right: 8px;
+      font-size: 0.62rem;
+      opacity: 0.25;
+      color: var(--gold);
+    }
+    .card-num {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 1.65rem;
+      color: var(--gold-bright);
+      text-shadow: 0 0 12px rgba(240,184,64,0.45);
+      line-height: 1;
+    }
+    .card-label {
+      font-size: 0.72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      font-family: 'Share Tech Mono', monospace;
+    }
+
+    /* Footer */
+    footer {
+      text-align: center;
+      margin-top: 72px;
+      padding-top: 28px;
+      border-top: 1px solid var(--fog);
+    }
+    .footer-skull { font-size: 1.4rem; opacity: 0.35; }
+    .footer-text {
+      font-family: 'Share Tech Mono', monospace;
+      font-size: 0.76rem;
+      color: var(--muted);
+      margin-top: 10px;
+      letter-spacing: 0.1em;
+    }
+    .footer-domain { color: var(--gold-dim); }
+
+    /* Ember particles */
+    .embers { position: fixed; inset: 0; pointer-events: none; z-index: 1; }
+    .ember {
+      position: absolute;
+      width: 2px; height: 2px;
+      border-radius: 50%;
+      background: var(--gold-bright);
+      opacity: 0;
+      left: var(--x);
+      bottom: -4px;
+      animation: rise var(--dur) ease-in infinite var(--delay);
+    }
+    @keyframes rise {
+      0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+      10%  { opacity: 0.85; }
+      80%  { opacity: 0.25; }
+      100% { opacity: 0; transform: translateY(-85vh) translateX(calc(var(--sway) * 28px)) scale(0.15); }
+    }
+
+    @media (max-width: 500px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 8px; }
+      .card { padding: 14px 6px 12px; }
+      .card-num { font-size: 1.35rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="sea-bg"></div>
+<div class="rope-top"></div>
+<div class="embers" id="embers"></div>
+
+<div class="page">
+  <header>
+    <span class="skull-icon">☠️</span>
+    <h1 class="site-name">FireWave Results</h1>
+    <p class="site-sub">results.firewave.in &nbsp;·&nbsp; Chart Yer Scores, Sailor</p>
+
+    <div class="divider"><span class="divider-icon">⚓</span></div>
+
+    <p class="intro-text">
+      Welcome aboard, brave soul. Select yer examination below to retrieve yer results from the depths of the archive. Each scroll holds the fate of those who dared take the test.
+    </p>
+  </header>
+
+  <p class="section-label">⚔️ JUT Examinations</p>
+  <p class="section-desc">Thirty trials sealed in time — pick yer number and claim yer destiny</p>
+
+  <div class="grid" id="jut-grid"></div>
+
+  <footer>
+    <div class="footer-skull">☠ &nbsp; ⚓ &nbsp; ☠</div>
+    <p class="footer-text">
+      &copy; 2025 &nbsp;<span class="footer-domain">results.firewave.in</span>&nbsp; — All results are final. No quarter given.
+    </p>
+  </footer>
+</div>
+
+<script>
+  // Generate JUT 01–30 cards
+  const grid = document.getElementById('jut-grid');
+  for (let i = 1; i <= 30; i++) {
+    const num = String(i).padStart(2, '0');
+    const a = document.createElement('a');
+    a.className = 'card';
+    a.href = `/jut${num}.html`;
+    a.style.animationDelay = `${(i - 1) * 38}ms`;
+    a.innerHTML = `
+      <span class="card-anchor">⚓</span>
+      <span class="card-num">${num}</span>
+      <span class="card-label">JUT ${num}</span>
+    `;
+    grid.appendChild(a);
+  }
+
+  // Ember particles
+  const ec = document.getElementById('embers');
+  const colors = ['#f0b840', '#e84c0e', '#f0b840', '#f0b840', '#c8922a'];
+  for (let i = 0; i < 24; i++) {
+    const e = document.createElement('div');
+    e.className = 'ember';
+    e.style.setProperty('--x', `${Math.random() * 100}%`);
+    e.style.setProperty('--dur', `${(4 + Math.random() * 5).toFixed(1)}s`);
+    e.style.setProperty('--delay', `${(Math.random() * 7).toFixed(1)}s`);
+    e.style.setProperty('--sway', `${(Math.random() * 2 - 1).toFixed(2)}`);
+    e.style.background = colors[Math.floor(Math.random() * colors.length)];
+    if (Math.random() > 0.7) { e.style.width = '3px'; e.style.height = '3px'; }
+    ec.appendChild(e);
+  }
+</script>
+</body>
+</html>
