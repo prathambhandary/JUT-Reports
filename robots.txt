@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /jut_student_results.csv
+Disallow: /report.html
+
+Sitemap: https://results.firewave.in/sitemap.xml

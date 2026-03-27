@@ -1,0 +1,946 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FireWave JUT Results — Chart Yer Course</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@400;700;900&family=Cinzel:wght@400;600;700&family=IM+Fell+English:ital@0;1&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="pirate.png">
+  <style>
+    :root {
+      --ink:         #07050a;
+      --deep:        #0c0910;
+      --surface:     #120d1a;
+      --surface-2:   #1a1325;
+      --border:      #2e2040;
+      --border-lit:  #6b4fa0;
+      --gold:        #d4a847;
+      --gold-bright: #f2c96a;
+      --gold-dim:    #7a5c1e;
+      --ember:       #e05a1a;
+      --crimson:     #9b1f3a;
+      --violet:      #5e3a8a;
+      --pale:        #e8dfc8;
+      --muted:       #7a6e8a;
+      --faint:       #3a3048;
+      --mono:        'Share Tech Mono', monospace;
+      --serif:       'IM Fell English', Georgia, serif;
+      --display:     'Cinzel Decorative', serif;
+      --caps:        'Cinzel', serif;
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--ink);
+      color: var(--pale);
+      font-family: var(--serif);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── BACKGROUND LAYERS ── */
+    .bg {
+      position: fixed; inset: 0; z-index: 0;
+      background:
+        radial-gradient(ellipse 90% 50% at 15% 90%, rgba(94,58,138,0.18) 0%, transparent 55%),
+        radial-gradient(ellipse 70% 40% at 85% 80%, rgba(155,31,58,0.14) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 60% at 50% 100%, rgba(12,9,16,0.9) 0%, transparent 70%),
+        linear-gradient(160deg, #0a0712 0%, #07050a 45%, #0c0716 100%);
+    }
+
+    /* Noise texture */
+    .noise {
+      position: fixed; inset: 0; z-index: 1;
+      opacity: 0.032;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px 256px;
+      pointer-events: none;
+    }
+
+    /* ── TOP ROPE BAR ── */
+    .rope {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 200;
+      height: 5px;
+      background: repeating-linear-gradient(
+        90deg,
+        var(--gold-dim) 0px,
+        var(--gold) 5px,
+        var(--gold-dim) 10px,
+        #3a2a08 14px,
+        var(--gold-dim) 18px
+      );
+      box-shadow: 0 0 18px rgba(212,168,71,0.35), 0 2px 6px rgba(0,0,0,0.8);
+    }
+
+    /* ── EMBERS ── */
+    .embers { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+    .ember {
+      position: absolute;
+      width: var(--sz, 2px); height: var(--sz, 2px);
+      border-radius: 50%;
+      background: var(--col, var(--gold-bright));
+      opacity: 0;
+      left: var(--x);
+      bottom: -6px;
+      animation: rise var(--dur) ease-in infinite var(--delay);
+      box-shadow: 0 0 4px var(--col, var(--gold-bright));
+    }
+    @keyframes rise {
+      0%   { opacity: 0; transform: translateY(0) translateX(0); }
+      8%   { opacity: 0.9; }
+      80%  { opacity: 0.2; }
+      100% { opacity: 0; transform: translateY(-90vh) translateX(calc(var(--sway) * 36px)); }
+    }
+
+    /* ── WAVES (bottom decoration) ── */
+    .wave-wrap {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 2;
+      height: 80px; pointer-events: none; overflow: hidden;
+    }
+    .wave {
+      position: absolute; bottom: 0; left: -50%; width: 200%;
+      height: 60px;
+      border-radius: 50% 50% 0 0;
+      opacity: 0.06;
+      animation: wave-move var(--wdur, 8s) ease-in-out infinite alternate;
+    }
+    .wave-1 { background: var(--violet); animation-duration: 7s; top: 12px; }
+    .wave-2 { background: var(--crimson); animation-duration: 9s; top: 24px; animation-delay: -3s; }
+    .wave-3 { background: var(--gold-dim); animation-duration: 11s; top: 0; animation-delay: -6s; }
+    @keyframes wave-move {
+      from { transform: translateX(-8%); }
+      to   { transform: translateX(8%); }
+    }
+
+    /* ── PAGE ── */
+    .page {
+      position: relative; z-index: 10;
+      max-width: 1140px;
+      margin: 0 auto;
+      padding: 0 28px 120px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      text-align: center;
+      padding: 80px 20px 0;
+    }
+
+    .crest {
+      position: relative;
+      display: inline-block;
+      margin-bottom: 28px;
+    }
+    .crest-ring {
+      width: 110px; height: 110px;
+      border-radius: 50%;
+      border: 2px solid var(--gold-dim);
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto;
+      position: relative;
+      background: radial-gradient(circle, rgba(212,168,71,0.08) 0%, transparent 70%);
+      box-shadow:
+        0 0 0 6px rgba(212,168,71,0.05),
+        0 0 40px rgba(212,168,71,0.12),
+        inset 0 0 24px rgba(0,0,0,0.6);
+      animation: crest-pulse 4s ease-in-out infinite;
+    }
+    @keyframes crest-pulse {
+      0%,100% { box-shadow: 0 0 0 6px rgba(212,168,71,0.05), 0 0 40px rgba(212,168,71,0.12), inset 0 0 24px rgba(0,0,0,0.6); }
+      50%      { box-shadow: 0 0 0 10px rgba(212,168,71,0.08), 0 0 60px rgba(212,168,71,0.24), inset 0 0 24px rgba(0,0,0,0.6); }
+    }
+    .crest-icon {
+      font-size: 3.4rem;
+      animation: bob 4s ease-in-out infinite;
+      filter: drop-shadow(0 0 16px rgba(212,168,71,0.6));
+    }
+    @keyframes bob {
+      0%,100% { transform: translateY(0) rotate(-4deg); }
+      50%      { transform: translateY(-8px) rotate(4deg); }
+    }
+
+    /* Ring decorators */
+    .crest-ring::before, .crest-ring::after {
+      content: '';
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid rgba(212,168,71,0.18);
+    }
+    .crest-ring::before { inset: -10px; }
+    .crest-ring::after  { inset: -18px; border-style: dashed; }
+
+    .site-name {
+      font-family: var(--display);
+      font-size: clamp(1.9rem, 6vw, 4.2rem);
+      font-weight: 900;
+      letter-spacing: 0.03em;
+      line-height: 1.1;
+      background: linear-gradient(160deg, var(--gold-bright) 30%, var(--gold) 60%, #a07020 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      text-shadow: none;
+      filter: drop-shadow(0 0 30px rgba(212,168,71,0.35));
+    }
+
+    .tagline {
+      font-family: var(--mono);
+      font-size: clamp(0.65rem, 1.6vw, 0.78rem);
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-top: 12px;
+    }
+    .tagline span { color: var(--gold-dim); }
+
+    /* ── ORNAMENT DIVIDER ── */
+    .ornament {
+      display: flex; align-items: center; gap: 14px;
+      margin: 30px auto;
+      max-width: 480px;
+    }
+    .ornament-line {
+      flex: 1; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--border-lit), transparent);
+    }
+    .ornament-center {
+      font-size: 1.1rem;
+      color: var(--gold);
+      filter: drop-shadow(0 0 8px rgba(212,168,71,0.5));
+    }
+
+    .intro {
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: clamp(1rem, 2.2vw, 1.16rem);
+      color: var(--pale);
+      opacity: 0.8;
+      max-width: 580px;
+      margin: 0 auto;
+      line-height: 1.85;
+    }
+
+    /* ── REPORT BANNER ── */
+    .report-banner {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      justify-content: space-between;
+      max-width: 700px;
+      margin: 36px auto 0;
+      padding: 22px 28px;
+      background:
+        linear-gradient(135deg, rgba(94,58,138,0.12) 0%, rgba(18,13,26,0.95) 50%, rgba(155,31,58,0.08) 100%);
+      border: 1px solid var(--border-lit);
+      border-radius: 8px;
+      text-decoration: none;
+      color: var(--pale);
+      position: relative; overflow: hidden;
+      transition: transform 0.24s ease, border-color 0.24s, box-shadow 0.24s;
+    }
+    .report-banner::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+    }
+    .report-banner::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(212,168,71,0.05), transparent);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .report-banner:hover {
+      transform: translateY(-4px);
+      border-color: var(--gold);
+      box-shadow: 0 0 40px rgba(212,168,71,0.25), 0 14px 40px rgba(0,0,0,0.6);
+    }
+    .report-banner:hover::after { opacity: 1; }
+    .banner-left {
+      display: flex; align-items: center; gap: 16px; flex: 1;
+      position: relative; z-index: 1;
+    }
+    .banner-icon {
+      font-size: 2.4rem;
+      flex-shrink: 0;
+      filter: drop-shadow(0 0 12px rgba(212,168,71,0.5));
+      animation: bob 3.6s ease-in-out infinite;
+    }
+    .banner-title {
+      font-family: var(--caps);
+      font-size: clamp(0.85rem, 2vw, 1.05rem);
+      font-weight: 700;
+      color: var(--gold-bright);
+      letter-spacing: 0.06em;
+      margin-bottom: 5px;
+    }
+    .banner-sub {
+      font-family: var(--mono);
+      font-size: clamp(0.58rem, 1.2vw, 0.68rem);
+      color: var(--muted);
+      letter-spacing: 0.05em;
+      line-height: 1.6;
+    }
+    .banner-cta {
+      position: relative; z-index: 1;
+      font-family: var(--caps);
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--ink);
+      padding: 11px 22px;
+      border-radius: 4px;
+      background: linear-gradient(135deg, var(--gold-bright), var(--gold));
+      flex-shrink: 0;
+      transition: all 0.22s;
+      box-shadow: 0 0 20px rgba(212,168,71,0.3), 0 4px 12px rgba(0,0,0,0.5);
+      white-space: nowrap;
+    }
+    .report-banner:hover .banner-cta {
+      background: linear-gradient(135deg, #fff0a0, var(--gold-bright));
+      box-shadow: 0 0 30px rgba(212,168,71,0.5), 0 6px 16px rgba(0,0,0,0.5);
+    }
+    @media (max-width: 540px) {
+      .report-banner { flex-direction: column; text-align: center; }
+      .banner-left { flex-direction: column; text-align: center; }
+      .banner-cta { width: 100%; text-align: center; }
+    }
+
+    /* ── SEARCH ── */
+    .search-wrap {
+      max-width: 420px;
+      margin: 52px auto 0;
+      position: relative;
+    }
+    .search-label {
+      font-family: var(--caps);
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+      margin-bottom: 10px;
+      display: block;
+      text-align: center;
+    }
+    .search-field-wrap {
+      position: relative;
+    }
+    .search-icon {
+      position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
+      font-size: 1.1rem; color: var(--muted); pointer-events: none;
+    }
+    #search-input {
+      width: 100%;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      color: var(--pale);
+      font-family: var(--mono);
+      font-size: 0.92rem;
+      letter-spacing: 0.06em;
+      padding: 13px 16px 13px 44px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      caret-color: var(--gold);
+    }
+    #search-input::placeholder { color: var(--faint); }
+    #search-input:focus {
+      border-color: var(--border-lit);
+      box-shadow: 0 0 0 3px rgba(107,79,160,0.15), 0 0 20px rgba(212,168,71,0.08);
+    }
+    .search-clear {
+      position: absolute; right: 14px; top: 50%; transform: translateY(-50%);
+      background: none; border: none; cursor: pointer;
+      color: var(--muted); font-size: 1rem;
+      opacity: 0; transition: opacity 0.2s;
+      padding: 4px;
+    }
+    .search-clear.visible { opacity: 1; }
+    .search-clear:hover { color: var(--gold); }
+
+    /* ── SECTION HEADER ── */
+    .section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      gap: 16px;
+      margin: 52px 0 24px;
+      flex-wrap: wrap;
+    }
+    .section-left {
+      display: flex; align-items: center; gap: 14px;
+    }
+    .section-badge {
+      width: 38px; height: 38px;
+      border-radius: 50%;
+      border: 1px solid var(--gold-dim);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem;
+      background: rgba(212,168,71,0.07);
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-family: var(--caps);
+      font-size: clamp(1.1rem, 2.8vw, 1.5rem);
+      font-weight: 700;
+      color: var(--gold);
+      letter-spacing: 0.04em;
+    }
+    .section-sub {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      margin-top: 3px;
+    }
+    .section-count {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.1em;
+      background: var(--surface-2);
+      border: 1px solid var(--border);
+      padding: 5px 12px;
+      border-radius: 20px;
+    }
+    #visible-count { color: var(--gold-bright); }
+
+    /* ── EMPTY STATE ── */
+    .empty-state {
+      display: none;
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--muted);
+    }
+    .empty-state.visible { display: block; }
+    .empty-icon { font-size: 2.8rem; margin-bottom: 16px; opacity: 0.5; }
+    .empty-title {
+      font-family: var(--caps);
+      font-size: 1.1rem;
+      color: var(--faint);
+      letter-spacing: 0.1em;
+      margin-bottom: 8px;
+    }
+    .empty-sub { font-family: var(--mono); font-size: 0.75rem; }
+
+    /* ── GRID ── */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── CARD ── */
+    .card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      padding: 24px 10px 18px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      text-decoration: none;
+      color: var(--pale);
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      opacity: 0;
+      transform: translateY(18px) scale(0.97);
+      animation: card-in 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+      transition: transform 0.2s ease, border-color 0.2s, box-shadow 0.2s, opacity 0.2s;
+    }
+
+    @keyframes card-in {
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* Shimmer on load */
+    .card::after {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(212,168,71,0.07), transparent, rgba(107,79,160,0.05));
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .card:hover {
+      transform: translateY(-5px) scale(1.04);
+      border-color: var(--gold-dim);
+      box-shadow:
+        0 0 28px rgba(212,168,71,0.2),
+        0 12px 32px rgba(0,0,0,0.6),
+        inset 0 0 20px rgba(212,168,71,0.04);
+    }
+    .card:hover::after { opacity: 1; }
+    .card:active { transform: translateY(0) scale(0.97); transition-duration: 0.1s; }
+
+    /* Ribbon top */
+    .card::before {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+      opacity: 0; transition: opacity 0.25s;
+    }
+    .card:hover::before { opacity: 1; }
+
+    /* Unavailable state */
+    .card.unavailable {
+      opacity: 0.28 !important;
+      cursor: not-allowed;
+      pointer-events: none;
+      filter: grayscale(0.6);
+    }
+    .card.unavailable .card-status { color: var(--crimson); }
+
+    /* Card elements */
+    .card-top-mark {
+      position: absolute; top: 7px; right: 9px;
+      font-size: 0.58rem; opacity: 0.2; color: var(--gold);
+      font-family: var(--mono);
+    }
+    .card-num {
+      font-family: var(--mono);
+      font-size: 2rem;
+      color: var(--gold-bright);
+      text-shadow: 0 0 16px rgba(212,168,71,0.4);
+      line-height: 1;
+      font-variant-numeric: tabular-nums;
+    }
+    .card.unavailable .card-num { color: var(--faint); text-shadow: none; }
+
+    .card-label {
+      font-family: var(--caps);
+      font-size: 0.62rem;
+      letter-spacing: 0.18em;
+      color: var(--muted);
+      text-transform: uppercase;
+    }
+    .card-status {
+      font-family: var(--mono);
+      font-size: 0.55rem;
+      letter-spacing: 0.14em;
+      color: var(--gold-dim);
+      margin-top: 3px;
+      text-transform: uppercase;
+    }
+
+    /* Availability tag */
+    .avail-dot {
+      width: 5px; height: 5px; border-radius: 50%;
+      background: #2aaa55;
+      box-shadow: 0 0 6px #2aaa55;
+      position: absolute; bottom: 8px; right: 9px;
+    }
+    .card.unavailable .avail-dot { background: var(--crimson); box-shadow: 0 0 6px var(--crimson); }
+    .card.checking .avail-dot { background: var(--gold-dim); box-shadow: 0 0 4px var(--gold-dim); animation: blink 1s ease-in-out infinite; }
+    @keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+    /* Hidden (filtered) cards */
+    .card.hidden {
+      display: none;
+    }
+
+    /* ── LEGEND ── */
+    .legend {
+      display: flex; align-items: center; gap: 20px; flex-wrap: wrap;
+      margin-top: 24px;
+      padding: 14px 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+    }
+    .legend-item {
+      display: flex; align-items: center; gap: 8px;
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      color: var(--muted);
+      letter-spacing: 0.08em;
+    }
+    .legend-dot {
+      width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0;
+    }
+    .legend-dot.live { background: #2aaa55; box-shadow: 0 0 6px #2aaa55; }
+    .legend-dot.missing { background: var(--crimson); box-shadow: 0 0 6px var(--crimson); }
+    .legend-dot.checking { background: var(--gold-dim); }
+
+    /* ── FILTERS ── */
+    .filters {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+    }
+    .filter-btn {
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--muted);
+      cursor: pointer;
+      transition: all 0.18s;
+    }
+    .filter-btn:hover { border-color: var(--border-lit); color: var(--pale); }
+    .filter-btn.active {
+      border-color: var(--gold-dim);
+      background: rgba(212,168,71,0.08);
+      color: var(--gold-bright);
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      margin-top: 80px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      position: relative;
+    }
+    footer::before {
+      content: '⚔ ☠ ⚔';
+      display: block;
+      font-size: 1rem;
+      opacity: 0.18;
+      margin-bottom: 16px;
+      letter-spacing: 0.3em;
+      color: var(--gold);
+    }
+    .footer-text {
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      color: var(--muted);
+      letter-spacing: 0.12em;
+    }
+    .footer-domain { color: var(--gold-dim); }
+
+    /* ── TOAST ── */
+    #toast {
+      position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(20px);
+      background: var(--surface-2);
+      border: 1px solid var(--border-lit);
+      border-radius: 6px;
+      padding: 12px 22px;
+      font-family: var(--mono);
+      font-size: 0.76rem;
+      color: var(--pale);
+      letter-spacing: 0.06em;
+      z-index: 999;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s, transform 0.3s;
+      box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+      white-space: nowrap;
+    }
+    #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 500px) {
+      .grid { grid-template-columns: repeat(auto-fill, minmax(105px, 1fr)); gap: 9px; }
+      .card { padding: 18px 8px 14px; }
+      .card-num { font-size: 1.7rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="bg"></div>
+<div class="noise"></div>
+<div class="rope"></div>
+<div class="embers" id="embers"></div>
+<div class="wave-wrap">
+  <div class="wave wave-1"></div>
+  <div class="wave wave-2"></div>
+  <div class="wave wave-3"></div>
+</div>
+
+<div class="page">
+
+  <!-- ── HEADER ── -->
+  <header>
+    <div class="crest">
+      <div class="crest-ring">
+        <span class="crest-icon">☠️</span>
+      </div>
+    </div>
+
+    <h1 class="site-name">FireWave JUT Results</h1>
+    <p class="tagline">results.firewave.in &nbsp;·&nbsp; <span>Chart Yer Scores, Sailor</span></p>
+
+    <div class="ornament">
+      <div class="ornament-line"></div>
+      <span class="ornament-center">⚓</span>
+      <div class="ornament-line"></div>
+    </div>
+
+    <p class="intro">
+      Welcome aboard, brave soul. Select yer examination below to retrieve yer results from the depths of the archive. Each scroll holds the fate of those who dared take the test.
+    </p>
+
+    <!-- REPORT BANNER -->
+    <a href="search.html" class="report-banner">
+      <div class="banner-left">
+        <span class="banner-icon">🧭</span>
+        <div>
+          <div class="banner-title">Chart Yer Own Voyage</div>
+          <div class="banner-sub">
+            Yer scores · Yer ranks · Archetypes · Career bests<br>
+            Subject breakdown · Fleet rank · Full battle history
+          </div>
+        </div>
+      </div>
+      <div class="banner-cta">⚔ Claim My Scroll</div>
+    </a>
+  </header>
+
+  <!-- ── SEARCH ── -->
+  <div class="search-wrap">
+    <label class="search-label" for="search-input">Search Examinations</label>
+    <div class="search-field-wrap">
+      <span class="search-icon">🔍</span>
+      <input
+        type="text"
+        id="search-input"
+        placeholder="e.g.  JUT 07  or  7"
+        autocomplete="off"
+        spellcheck="false"
+      />
+      <button class="search-clear" id="search-clear" title="Clear search">✕</button>
+    </div>
+  </div>
+
+  <!-- ── SECTION ── -->
+  <div class="section-header">
+    <div class="section-left">
+      <div class="section-badge">⚔️</div>
+      <div>
+        <div class="section-title">JUT Examinations</div>
+        <div class="section-sub">Thirty trials sealed in time</div>
+      </div>
+    </div>
+    <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+      <div class="filters">
+        <button class="filter-btn active" data-filter="all">All</button>
+        <button class="filter-btn" data-filter="live">Available</button>
+        <button class="filter-btn" data-filter="unavailable">Unavailable</button>
+      </div>
+      <div class="section-count"><span id="visible-count">30</span> / 30</div>
+    </div>
+  </div>
+
+  <div class="grid" id="jut-grid"></div>
+
+  <div class="empty-state" id="empty-state">
+    <div class="empty-icon">🌊</div>
+    <div class="empty-title">No Examinations Found</div>
+    <div class="empty-sub">The seas are empty — adjust yer search and try again</div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot live"></div>
+      <span>Results available</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot missing"></div>
+      <span>Not yet published</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot checking"></div>
+      <span>Checking availability…</span>
+    </div>
+  </div>
+
+  <footer>
+    <p class="footer-text">
+      &copy; 2025 &nbsp;<span class="footer-domain">results.firewave.in</span>&nbsp; — All results are final. No quarter given.
+    </p>
+  </footer>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+  /* ── EMBER PARTICLES ── */
+  const ec = document.getElementById('embers');
+  const emberColors = ['#f2c96a','#e05a1a','#f2c96a','#f2c96a','#d4a847','#c83040'];
+  for (let i = 0; i < 28; i++) {
+    const e = document.createElement('div');
+    e.className = 'ember';
+    const sz = Math.random() > 0.72 ? '3px' : '2px';
+    e.style.cssText = `
+      --x: ${Math.random() * 100}%;
+      --dur: ${(4 + Math.random() * 6).toFixed(1)}s;
+      --delay: ${(Math.random() * 8).toFixed(1)}s;
+      --sway: ${(Math.random() * 2 - 1).toFixed(2)};
+      --col: ${emberColors[Math.floor(Math.random() * emberColors.length)]};
+      --sz: ${sz};
+      width: ${sz}; height: ${sz};
+    `;
+    ec.appendChild(e);
+  }
+
+  /* ── TOAST ── */
+  const toastEl = document.getElementById('toast');
+  let toastTimer;
+  function showToast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 2800);
+  }
+
+  /* ── BUILD CARDS ── */
+  const grid = document.getElementById('jut-grid');
+  const cards = [];
+
+  for (let i = 1; i <= 30; i++) {
+    const num = String(i).padStart(2, '0');
+    const a = document.createElement('a');
+    a.className = 'card checking';
+    a.href = `/jut${num}.html`;
+    a.dataset.jut = num;
+    a.dataset.status = 'checking';
+    a.style.animationDelay = `${(i - 1) * 35}ms`;
+
+    a.innerHTML = `
+      <span class="card-top-mark">⚓</span>
+      <span class="card-num">${num}</span>
+      <span class="card-label">JUT ${num}</span>
+      <span class="card-status">Checking…</span>
+      <span class="avail-dot"></span>
+    `;
+
+    /* Click handler: intercept unavailable cards */
+    a.addEventListener('click', e => {
+      if (a.dataset.status === 'unavailable') {
+        e.preventDefault();
+        showToast(`⚓ JUT ${num} — results not yet published`);
+        return;
+      }
+      if (a.dataset.status === 'checking') {
+        e.preventDefault();
+        showToast(`⏳ JUT ${num} — still checking availability…`);
+      }
+    });
+
+    grid.appendChild(a);
+    cards.push(a);
+  }
+
+  /* ── AVAILABILITY CHECK ── */
+  async function checkCard(a) {
+    const num = a.dataset.jut;
+    const url = `/jut${num}.html`;
+    try {
+      const res = await fetch(url, { method: 'HEAD' });
+      const ok = res.ok;
+      const status = a.querySelector('.card-status');
+      if (ok) {
+        a.classList.remove('checking', 'unavailable');
+        a.dataset.status = 'live';
+        status.textContent = 'Available';
+      } else {
+        a.classList.remove('checking');
+        a.classList.add('unavailable');
+        a.dataset.status = 'unavailable';
+        status.textContent = 'Unavailable';
+        a.href = '#';
+      }
+    } catch {
+      a.classList.remove('checking');
+      a.classList.add('unavailable');
+      a.dataset.status = 'unavailable';
+      const status = a.querySelector('.card-status');
+      if (status) status.textContent = 'Unavailable';
+      a.href = '#';
+    }
+    updateCount();
+  }
+
+  /* Check all in small batches to avoid rate-limiting */
+  async function checkAll() {
+    const batch = 6;
+    for (let i = 0; i < cards.length; i += batch) {
+      const slice = cards.slice(i, i + batch);
+      await Promise.all(slice.map(checkCard));
+    }
+  }
+  checkAll();
+
+  /* ── SEARCH ── */
+  const input   = document.getElementById('search-input');
+  const clearBtn = document.getElementById('search-clear');
+  const emptyEl  = document.getElementById('empty-state');
+
+  function normalize(s) { return s.replace(/\D/g, ''); }
+
+  function applySearch() {
+    const q = input.value.trim().toLowerCase();
+    const digits = normalize(q);
+    clearBtn.classList.toggle('visible', q.length > 0);
+
+    let visible = 0;
+    cards.forEach(card => {
+      const num = card.dataset.jut;
+      const matches = !q ||
+        `jut ${num}`.includes(q) ||
+        `jut${num}`.includes(q) ||
+        (digits && num.includes(digits.padStart ? digits : digits));
+
+      const hiddenByFilter = card.classList.contains('filter-hidden');
+      if (matches && !hiddenByFilter) {
+        card.classList.remove('hidden');
+        visible++;
+      } else {
+        card.classList.add('hidden');
+      }
+    });
+
+    emptyEl.classList.toggle('visible', visible === 0);
+    document.getElementById('visible-count').textContent = visible;
+  }
+
+  input.addEventListener('input', applySearch);
+  clearBtn.addEventListener('click', () => {
+    input.value = '';
+    applySearch();
+    input.focus();
+  });
+
+  /* ── FILTER BUTTONS ── */
+  document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const filter = btn.dataset.filter;
+
+      cards.forEach(card => {
+        let hide = false;
+        if (filter === 'live' && card.dataset.status !== 'live') hide = true;
+        if (filter === 'unavailable' && card.dataset.status !== 'unavailable') hide = true;
+        card.classList.toggle('filter-hidden', hide);
+      });
+
+      applySearch();
+    });
+  });
+
+  /* ── COUNT UPDATE ── */
+  function updateCount() {
+    applySearch(); // recount + re-filter
+  }
+
+  /* ── KEYBOARD SHORTCUT ── */
+  document.addEventListener('keydown', e => {
+    if ((e.key === '/' || e.key === 'f') && document.activeElement !== input) {
+      e.preventDefault();
+      input.focus();
+    }
+    if (e.key === 'Escape' && document.activeElement === input) {
+      input.blur();
+    }
+  });
+</script>
+</body>
+</html>

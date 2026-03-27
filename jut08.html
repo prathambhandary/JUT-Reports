@@ -1,0 +1,2111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>🏴‍☠️ JUT Treasure Report — FireWave</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link rel="icon" type="image/png" href="/pirate.png">
+<script src="header.js"></script>
+<style>
+  /* ── Palette — mirrors the landing page ── */
+  :root {
+    --ink:       #0a0806;
+    --parchment: #1a1208;
+    --deep:      #0d0b07;
+    --smoke:     #2a2218;
+    --fog:       #3d3225;
+    --gold:      #c8922a;
+    --gold-bright:#f0b840;
+    --gold-dim:  #7a5518;
+    --rust:      #8b2e0a;
+    --ember:     #e84c0e;
+    --pale:      #d4c4a0;
+    --muted:     #7a6a50;
+    --teal:      #a0d8e8;
+    --green:     #7ecb8a;
+    --red:       #c87a6a;
+    --magenta:   #d08ab8;
+  }
+
+  *, *::before, *::after { box-sizing:border-box; margin:0; padding:0; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background-color: var(--ink);
+    color: var(--pale);
+    font-family: 'Crimson Pro', Georgia, serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    font-size: 16px;
+  }
+
+  /* ── Grain texture (same as landing page) ── */
+  body::before {
+    content:'';
+    position:fixed; inset:0; z-index:1000;
+    pointer-events:none;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+    opacity:.45;
+  }
+
+  /* ── Sea-depth background ── */
+  .sea-bg {
+    position:fixed; inset:0; z-index:0;
+    background:
+      radial-gradient(ellipse 120% 60% at 50% 100%, #0a1f2e 0%, transparent 70%),
+      radial-gradient(ellipse 80% 40% at 80% 110%, #0d3348 0%, transparent 60%),
+      linear-gradient(180deg, #0a0806 0%, #0d0b07 55%, #081520 100%);
+  }
+
+  /* ── Rope top border (same as landing) ── */
+  .rope-top {
+    position:fixed; top:0; left:0; right:0; height:6px; z-index:500;
+    background:repeating-linear-gradient(
+      90deg,
+      var(--gold-dim) 0px, var(--gold) 4px,
+      var(--gold-dim) 8px, #5a3e10 12px,
+      var(--gold-dim) 16px
+    );
+    box-shadow:0 2px 14px rgba(200,146,42,.35);
+  }
+
+  /* ── Everything sits above the bg layers ── */
+  .page { position:relative; z-index:2; }
+
+  /* ── HERO ── */
+  .hero {
+    text-align:center;
+    padding:72px 20px 44px;
+    position:relative;
+  }
+  .hero::after {
+    content:'';
+    display:block; height:1px;
+    background:linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+    margin-top:44px;
+  }
+  .skull-bob {
+    font-size:3rem; display:block; margin-bottom:14px;
+    filter:drop-shadow(0 0 20px rgba(240,184,64,.55));
+    animation:bob 3s ease-in-out infinite;
+  }
+  @keyframes bob {
+    0%,100%{ transform:translateY(0) rotate(-3deg); }
+    50%    { transform:translateY(-9px) rotate(3deg); }
+  }
+  .hero-title {
+    font-family:'Uncial Antiqua', serif;
+    font-size:clamp(1.8rem, 5vw, 3.6rem);
+    color:var(--gold-bright);
+    letter-spacing:.04em;
+    text-shadow:
+      0 0 30px rgba(240,184,64,.4),
+      0 2px 0 #3a2000,
+      0 4px 24px rgba(0,0,0,.8);
+    line-height:1.15;
+  }
+  .hero-sub {
+    font-family:'Crimson Pro', serif;
+    font-style:italic;
+    font-size:clamp(.9rem, 2vw, 1.15rem);
+    color:var(--muted);
+    margin-top:10px;
+    letter-spacing:.08em;
+  }
+
+  /* ── Sticky nav ── */
+  .nav {
+    position:sticky; top:0; z-index:200;
+    background:rgba(10,8,6,.92);
+    backdrop-filter:blur(12px);
+    border-bottom:1px solid var(--fog);
+    padding:10px 20px;
+    display:flex; flex-wrap:wrap; justify-content:center; gap:6px;
+  }
+  .nav a {
+    font-family:'Share Tech Mono', monospace;
+    font-size:.68rem; letter-spacing:.1em;
+    color:var(--muted);
+    text-decoration:none;
+    padding:4px 12px;
+    border:1px solid var(--fog);
+    border-radius:3px;
+    transition:all .2s;
+    text-transform:uppercase;
+  }
+  .nav a:hover {
+    color:var(--gold-bright);
+    border-color:var(--gold-dim);
+    background:rgba(200,146,42,.07);
+    box-shadow:0 0 8px rgba(200,146,42,.15);
+  }
+
+  /* ── Container ── */
+  .container {
+    max-width:1300px; margin:0 auto;
+    padding:0 24px 100px;
+  }
+
+  /* ── Section ── */
+  .section { margin-top:64px; scroll-margin-top:80px; }
+  .section-title {
+    font-family:'Uncial Antiqua', serif;
+    font-size:clamp(1.1rem, 2.5vw, 1.5rem);
+    color:var(--gold);
+    letter-spacing:.05em;
+    border-left:3px solid var(--gold);
+    padding-left:14px;
+    margin-bottom:6px;
+    text-shadow:0 0 18px rgba(200,146,42,.25);
+  }
+  .section-sub {
+    font-style:italic;
+    color:var(--muted);
+    font-size:.88rem;
+    padding-left:17px;
+    margin-bottom:22px;
+    letter-spacing:.04em;
+  }
+
+  /* ── Stat cards ── */
+  .cards {
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(180px, 1fr));
+    gap:14px; margin-bottom:4px;
+  }
+  .card {
+    background:linear-gradient(145deg, #1e160a, #130e06);
+    border:1px solid var(--fog);
+    border-radius:6px;
+    padding:20px 16px;
+    position:relative; overflow:hidden;
+    transition:transform .2s, box-shadow .2s, border-color .2s;
+  }
+  .card::before {
+    content:''; position:absolute; top:0; left:0; right:0; height:2px;
+    background:linear-gradient(90deg, transparent, var(--gold-dim), transparent);
+  }
+  .card:hover {
+    transform:translateY(-3px);
+    border-color:var(--gold-dim);
+    box-shadow:0 8px 30px rgba(0,0,0,.5), 0 0 15px rgba(200,146,42,.1);
+  }
+  .card-label { color:var(--muted); font-size:.68rem; letter-spacing:.15em; text-transform:uppercase; font-family:'Share Tech Mono',monospace; }
+  .card-value { font-family:'Uncial Antiqua', serif; font-size:1.8rem; color:var(--gold-bright); margin:8px 0 4px; text-shadow:0 0 10px rgba(240,184,64,.3); }
+  .card-note  { color:var(--muted); font-size:.75rem; font-style:italic; }
+  .card.teal::before   { background:linear-gradient(90deg,transparent,var(--teal),transparent); }
+  .card.teal .card-value { color:var(--teal); text-shadow:0 0 10px rgba(160,216,232,.3); }
+  .card.green::before  { background:linear-gradient(90deg,transparent,var(--green),transparent); }
+  .card.green .card-value { color:var(--green); }
+  .card.red::before    { background:linear-gradient(90deg,transparent,var(--red),transparent); }
+  .card.red .card-value { color:var(--red); }
+
+  /* ── Tables ── */
+  .table-wrap {
+    overflow-x:auto;
+    border:1px solid var(--fog);
+    border-radius:6px;
+  }
+  table { width:100%; border-collapse:collapse; font-size:.78rem; font-family:'Share Tech Mono',monospace; }
+  thead tr {
+    background:linear-gradient(90deg, #1e160a, #130e06);
+    font-size:.66rem; letter-spacing:.1em; text-transform:uppercase;
+    color:var(--gold);
+  }
+  th,td { padding:9px 13px; text-align:left; border-bottom:1px solid rgba(61,50,37,.5); white-space:nowrap; }
+  tr:last-child td { border-bottom:none; }
+  tbody tr { background:rgba(26,18,8,.7); transition:background .15s; }
+  tbody tr:hover { background:rgba(42,34,24,.9); }
+  tbody tr:nth-child(even) { background:rgba(13,11,7,.8); }
+
+  .num { text-align:right; }
+  .gold    { color:var(--gold-bright)!important; }
+  .cyan    { color:var(--teal)!important; }
+  .green   { color:var(--green)!important; }
+  .red     { color:var(--red)!important; }
+  .magenta { color:var(--magenta)!important; }
+
+  /* ── Sort headers ── */
+  th.sort { cursor:pointer; user-select:none; }
+  th.sort:hover { color:var(--gold-bright); }
+  th.sort::after { content:' ⇅'; opacity:.35; font-size:.6rem; }
+  th.sort.asc::after  { content:' ▲'; opacity:1; color:var(--gold); }
+  th.sort.desc::after { content:' ▼'; opacity:1; color:var(--gold); }
+
+  /* ── Badges ── */
+  .rank-badge {
+    display:inline-block;
+    background:linear-gradient(135deg, #1e160a, #130e06);
+    border:1px solid var(--fog);
+    padding:2px 8px; border-radius:3px;
+    color:var(--teal); font-size:.72rem;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .gold-badge { border-color:var(--gold-dim)!important; color:var(--gold-bright)!important; }
+  .badge { display:inline-block; padding:2px 9px; border-radius:3px; font-size:.7rem; font-family:'Share Tech Mono',monospace; }
+  .badge-red    { background:rgba(139,46,10,.2);  color:var(--red);    border:1px solid var(--rust); }
+  .badge-yellow { background:rgba(200,146,42,.15); color:var(--gold);   border:1px solid var(--gold-dim); }
+  .badge-green  { background:rgba(126,203,138,.1); color:var(--green);  border:1px solid #3a6a40; }
+
+  /* ── Subject bars ── */
+  .subj-bar-row {
+    display:grid; grid-template-columns:140px 1fr 70px;
+    align-items:center; gap:14px; margin:10px 0;
+  }
+  .subj-label { color:var(--pale); font-size:.85rem; font-family:'Crimson Pro',serif; }
+  .subj-pct   { color:var(--gold-bright); text-align:right; font-size:.88rem; font-family:'Share Tech Mono',monospace; }
+
+  /* ── Carry/drag bars ── */
+  .bar-row {
+    display:grid; grid-template-columns:110px 1fr 90px;
+    align-items:center; gap:12px; margin:6px 0; font-size:.78rem;
+    font-family:'Share Tech Mono',monospace;
+  }
+
+  /* ── Gender grid ── */
+  .duel-wrap   { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .gender-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; margin-bottom:22px; }
+  @media(max-width:700px){.duel-wrap,.gender-grid{grid-template-columns:1fr;}}
+  .gender-card {
+    background:linear-gradient(145deg, #1e160a, #130e06);
+    border:1px solid var(--fog); border-radius:6px; padding:22px;
+  }
+  .gender-card.male   { border-top:3px solid var(--teal); }
+  .gender-card.female { border-top:3px solid var(--magenta); }
+  .gender-card h3 {
+    font-family:'Uncial Antiqua', serif;
+    font-size:.95rem; letter-spacing:.08em; margin-bottom:16px;
+  }
+  .gender-card.male h3   { color:var(--teal); }
+  .gender-card.female h3 { color:var(--magenta); }
+  .gc-row {
+    display:flex; justify-content:space-between; padding:6px 0;
+    border-bottom:1px solid rgba(61,50,37,.4);
+    font-family:'Share Tech Mono',monospace; font-size:.76rem;
+  }
+  .gc-row:last-child { border-bottom:none; }
+  .gc-val { color:var(--gold-bright); }
+
+  /* ── Archetype chips ── */
+  .archetype-legend { display:flex; flex-wrap:wrap; gap:9px; margin-bottom:22px; }
+  .arch-chip {
+    display:inline-flex; align-items:center; gap:6px;
+    padding:6px 14px; border-radius:20px; font-size:.72rem;
+    border:1px solid var(--fog);
+    background:linear-gradient(135deg, #1e160a, #130e06);
+    color:var(--pale); font-family:'Crimson Pro',serif;
+    font-style:italic; letter-spacing:.04em;
+    transition:transform .15s, border-color .2s;
+    cursor:default;
+  }
+  .arch-chip:hover { transform:scale(1.05); border-color:var(--gold-dim); }
+
+  /* ── Tier grid ── */
+  .tier-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); gap:18px; }
+  .tier-card {
+    background:linear-gradient(145deg, #1e160a, #130e06);
+    border:1px solid var(--fog); border-radius:6px; padding:20px;
+    transition:border-color .2s;
+  }
+  .tier-card:hover { border-color:var(--gold-dim); }
+  .tier-card h4 {
+    font-family:'Uncial Antiqua', serif;
+    font-size:.95rem; color:var(--gold); letter-spacing:.06em; margin-bottom:14px;
+  }
+  .tier-row {
+    display:grid; grid-template-columns:110px 1fr 40px;
+    align-items:center; gap:8px; margin:7px 0; font-size:.74rem;
+    font-family:'Share Tech Mono',monospace;
+  }
+  .tier-label-elite  { color:var(--gold-bright); }
+  .tier-label-decent { color:var(--teal); }
+  .tier-label-shaky  { color:var(--pale); }
+  .tier-label-sinkin { color:var(--red); }
+
+  /* ── Divider ornament ── */
+  .divider-ornament {
+    display:flex; align-items:center; gap:12px;
+    margin:0 0 24px;
+  }
+  .divider-ornament::before,.divider-ornament::after {
+    content:''; flex:1; height:1px;
+    background:linear-gradient(90deg, transparent, var(--fog), transparent);
+  }
+  .divider-ornament span { color:var(--gold-dim); font-size:.9rem; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width:6px; height:6px; }
+  ::-webkit-scrollbar-track { background:var(--ink); }
+  ::-webkit-scrollbar-thumb { background:var(--fog); border-radius:3px; }
+
+  /* ── Ember particles ── */
+  .embers { position:fixed; inset:0; pointer-events:none; z-index:1; }
+  .ember {
+    position:absolute; width:2px; height:2px; border-radius:50%;
+    background:var(--gold-bright); opacity:0;
+    left:var(--x); bottom:-4px;
+    animation:rise var(--dur) ease-in infinite var(--delay);
+  }
+  @keyframes rise {
+    0%  { opacity:0; transform:translateY(0) translateX(0) scale(1); }
+    10% { opacity:.8; }
+    80% { opacity:.2; }
+    100%{ opacity:0; transform:translateY(-80vh) translateX(calc(var(--sway)*28px)) scale(.15); }
+  }
+
+  /* ── Footer ── */
+  .footer {
+    text-align:center; padding:40px 20px;
+    border-top:1px solid var(--fog); margin-top:70px;
+    font-family:'Share Tech Mono',monospace;
+    font-size:.75rem; color:var(--muted); letter-spacing:.1em;
+  }
+  .footer-domain { color:var(--gold-dim); }
+
+  @media(max-width:600px){
+    .cards { grid-template-columns:repeat(auto-fill,minmax(140px,1fr)); }
+  }
+</style>
+</head>
+<body>
+
+<div class="sea-bg"></div>
+<div class="rope-top"></div>
+<div class="embers" id="embers"></div>
+
+<div class="page">
+
+<div class="hero">
+  <span class="skull-bob">☠️</span>
+  <h1 class="hero-title">🏴‍☠️ JUT Treasure Report 🏴‍☠️</h1>
+  <p class="hero-sub">results.firewave.in &nbsp;·&nbsp; Plundered from the Digital Seas &nbsp;·&nbsp; ⚓</p>
+</div>
+
+<nav class="nav">
+  <a href="#overview">⚓ Overview</a>
+  <a href="#glory">👑 Hall of Glory</a>
+  <a href="#full-table">📋 Full Crew</a>
+  <a href="#subjects">🎯 Subjects</a>
+  <a href="#gender">⚧ Gender Duel</a>
+  <a href="#damage">💀 Neg Marking</a>
+  <a href="#danger">⚠ Danger Zone</a>
+  <a href="#carry">⚖ Carry/Drag</a>
+  <a href="#archetypes">🎭 Archetypes</a>
+  <a href="#acc-tiers">📐 Acc Tiers</a>
+</nav>
+
+<div class="container">
+
+  <!-- ── OVERVIEW ── -->
+  <div class="section" id="overview">
+    <div class="section-title">⚓ Fleet Overview</div>
+    <div class="section-sub">the vital signs of yer entire armada at a glance</div>
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Total Sailors</div>
+        <div class="card-value">44</div>
+        <div class="card-note">souls analysed</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Avg Score</div>
+        <div class="card-value">84.0</div>
+        <div class="card-note">σ = 37.3</div>
+      </div>
+      <div class="card green">
+        <div class="card-label">Highest Plunder</div>
+        <div class="card-value">176</div>
+        <div class="card-note">PRATHAM BHANDARY</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Lowest Catch</div>
+        <div class="card-value">17</div>
+        <div class="card-note">PRATHVI PRABHU</div>
+      </div>
+      <div class="card teal">
+        <div class="card-label">Fleet Median</div>
+        <div class="card-value">79</div>
+        <div class="card-note">danger band ±15</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Avg Efficiency</div>
+        <div class="card-value">1.86</div>
+        <div class="card-note">marks per attempt</div>
+      </div>
+      <div class="card red">
+        <div class="card-label">Total Marks Bled</div>
+        <div class="card-value">861</div>
+        <div class="card-note">from negative marking</div>
+      </div>
+      <div class="card teal">
+        <div class="card-label">Males / Females</div>
+        <div class="card-value">30 / 14</div>
+        <div class="card-note">gender split</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── HALL OF GLORY ── -->
+  <div class="section" id="glory">
+    <div class="section-title">👑 Hall of Glory — The Fearsome Thirty</div>
+    <div class="section-sub">rank ≤ 30 — the finest buccaneers in the fleet</div>
+    <div class="table-wrap">
+      <table id="glory-table">
+        <thead><tr>
+          <th class="sort">Rank</th><th>Name</th>
+          <th class="sort">Score</th><th class="sort">Accuracy</th>
+          <th>Gender</th><th>Carries</th><th>Title</th>
+        </tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── FULL CREW ── -->
+  <div class="section" id="full-table">
+    <div class="section-title">📋 Full Crew Manifest</div>
+    <div class="section-sub">every sailor — click headers to sort</div>
+    <div class="table-wrap">
+      <table id="main-table">
+        <thead><tr>
+          <th class="sort">Rank</th><th>Name</th>
+          <th class="sort">Score</th><th class="sort">Accuracy</th>
+          <th>Gender</th><th class="sort">Attempts</th>
+          <th class="sort">Wrong</th><th class="sort">Mks Lost</th>
+          <th class="sort">Efficiency</th><th class="sort">Percentile</th>
+          <th>Standing</th>
+          <th class="sort">Phy Acc</th><th class="sort">Chem Acc</th><th class="sort">Math Acc</th>
+          <th>Carries</th><th>Drags</th><th>NM Damage</th><th>Archetype</th>
+        </tr></thead>
+        <tbody>
+        <tr>
+          <td><span class="rank-badge">#34</span></td>
+          <td><strong>PRATHAM BHANDARY</strong></td>
+          <td class="num gold">176</td>
+          <td class="num">78.0%</td>
+          <td>♂ Male</td>
+          <td class="num">59</td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num gold">2.98</td>
+          <td class="num cyan">97.7%</td>
+          <td>⭐ Top 10%</td>
+          <td>73.7%</td>
+          <td>75.0%</td>
+          <td>87.5%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+          <td>⚓ THE RELIABLE HAND</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#41</span></td>
+          <td><strong>HARIKEERTHAN NAYAK</strong></td>
+          <td class="num gold">158</td>
+          <td class="num">73.7%</td>
+          <td>♂ Male</td>
+          <td class="num">57</td>
+          <td class="num red">15</td>
+          <td class="num red">-15</td>
+          <td class="num gold">2.77</td>
+          <td class="num cyan">95.5%</td>
+          <td>⭐ Top 10%</td>
+          <td>90.0%</td>
+          <td>45.8%</td>
+          <td>100.0%</td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+          <td>⚓ THE RELIABLE HAND</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#48</span></td>
+          <td><strong>AMOGH U ACHARYA</strong></td>
+          <td class="num gold">153</td>
+          <td class="num">76.9%</td>
+          <td>♂ Male</td>
+          <td class="num">52</td>
+          <td class="num red">12</td>
+          <td class="num red">-12</td>
+          <td class="num gold">2.94</td>
+          <td class="num cyan">93.2%</td>
+          <td>⭐ Top 10%</td>
+          <td>70.8%</td>
+          <td>82.6%</td>
+          <td>80.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+          <td>🗡️ THE SPECIALIST</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#51</span></td>
+          <td><strong>SATHWIK RAJ KUMBHASHI</strong></td>
+          <td class="num gold">149</td>
+          <td class="num">71.4%</td>
+          <td>♂ Male</td>
+          <td class="num">56</td>
+          <td class="num red">16</td>
+          <td class="num red">-16</td>
+          <td class="num gold">2.66</td>
+          <td class="num cyan">90.9%</td>
+          <td>⭐ Top 10%</td>
+          <td>58.3%</td>
+          <td>82.6%</td>
+          <td>77.8%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🗡️ THE SPECIALIST</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#53</span></td>
+          <td><strong>SAMRUDHI D SHETTY</strong></td>
+          <td class="num gold">146</td>
+          <td class="num">77.6%</td>
+          <td>♀ Female</td>
+          <td class="num">49</td>
+          <td class="num red">11</td>
+          <td class="num red">-11</td>
+          <td class="num gold">2.98</td>
+          <td class="num cyan">88.6%</td>
+          <td>🏅 Top 25%</td>
+          <td>70.6%</td>
+          <td>68.4%</td>
+          <td>100.0%</td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+          <td>⚖️ THE BALANCED SAGE</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#58</span></td>
+          <td><strong>KAUSTUBHA H</strong></td>
+          <td class="num gold">141</td>
+          <td class="num">66.1%</td>
+          <td>♂ Male</td>
+          <td class="num">59</td>
+          <td class="num red">20</td>
+          <td class="num red">-20</td>
+          <td class="num gold">2.39</td>
+          <td class="num cyan">86.4%</td>
+          <td>🏅 Top 25%</td>
+          <td>71.4%</td>
+          <td>52.2%</td>
+          <td>80.0%</td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>⚖️ THE BALANCED SAGE</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#60</span></td>
+          <td><strong>SAARANG BHAGAVATH</strong></td>
+          <td class="num gold">138</td>
+          <td class="num">71.2%</td>
+          <td>♂ Male</td>
+          <td class="num">52</td>
+          <td class="num red">15</td>
+          <td class="num red">-15</td>
+          <td class="num gold">2.65</td>
+          <td class="num cyan">84.1%</td>
+          <td>🏅 Top 25%</td>
+          <td>52.9%</td>
+          <td>72.7%</td>
+          <td>92.3%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>⚓ THE RELIABLE HAND</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#66</span></td>
+          <td><strong>HARSHAD P KOTIAN</strong></td>
+          <td class="num gold">122</td>
+          <td class="num">64.2%</td>
+          <td>♂ Male</td>
+          <td class="num">53</td>
+          <td class="num red">19</td>
+          <td class="num red">-19</td>
+          <td class="num gold">2.30</td>
+          <td class="num cyan">81.8%</td>
+          <td>🏅 Top 25%</td>
+          <td>46.7%</td>
+          <td>72.7%</td>
+          <td>68.8%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>⚓ THE RELIABLE HAND</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#69</span></td>
+          <td><strong>TARUN M SHETTY</strong></td>
+          <td class="num gold">115</td>
+          <td class="num">61.8%</td>
+          <td>♂ Male</td>
+          <td class="num">55</td>
+          <td class="num red">21</td>
+          <td class="num red">-21</td>
+          <td class="num gold">2.09</td>
+          <td class="num cyan">79.5%</td>
+          <td>🏅 Top 25%</td>
+          <td>64.7%</td>
+          <td>63.6%</td>
+          <td>56.2%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>⚖️ THE BALANCED SAGE</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#72</span></td>
+          <td><strong>SNEHAL HEGDE</strong></td>
+          <td class="num gold">111</td>
+          <td class="num">63.3%</td>
+          <td>♂ Male</td>
+          <td class="num">49</td>
+          <td class="num red">18</td>
+          <td class="num red">-18</td>
+          <td class="num gold">2.27</td>
+          <td class="num cyan">77.3%</td>
+          <td>🏅 Top 25%</td>
+          <td>25.0%</td>
+          <td>72.7%</td>
+          <td>80.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🗡️ THE SPECIALIST</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#74</span></td>
+          <td><strong>PREETHI G BHAT</strong></td>
+          <td class="num gold">107</td>
+          <td class="num">67.4%</td>
+          <td>♀ Female</td>
+          <td class="num">43</td>
+          <td class="num red">14</td>
+          <td class="num red">-14</td>
+          <td class="num gold">2.49</td>
+          <td class="num cyan">72.7%</td>
+          <td>⚓ Top Half</td>
+          <td>64.3%</td>
+          <td>50.0%</td>
+          <td>100.0%</td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>⚖️ THE BALANCED SAGE</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#75</span></td>
+          <td><strong>ARJUN SHETTY</strong></td>
+          <td class="num gold">107</td>
+          <td class="num">67.4%</td>
+          <td>♂ Male</td>
+          <td class="num">43</td>
+          <td class="num red">14</td>
+          <td class="num red">-14</td>
+          <td class="num gold">2.49</td>
+          <td class="num cyan">72.7%</td>
+          <td>⚓ Top Half</td>
+          <td>61.5%</td>
+          <td>66.7%</td>
+          <td>77.8%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#79</span></td>
+          <td><strong>TANMAYA P BHANDARKAR</strong></td>
+          <td class="num gold">100</td>
+          <td class="num">64.4%</td>
+          <td>♀ Female</td>
+          <td class="num">45</td>
+          <td class="num red">16</td>
+          <td class="num red">-16</td>
+          <td class="num gold">2.22</td>
+          <td class="num cyan">70.5%</td>
+          <td>⚓ Top Half</td>
+          <td>50.0%</td>
+          <td>62.5%</td>
+          <td>84.6%</td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>⚖️ THE BALANCED SAGE</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#81</span></td>
+          <td><strong>MANYA H ANCHAN</strong></td>
+          <td class="num gold">96</td>
+          <td class="num">57.1%</td>
+          <td>♀ Female</td>
+          <td class="num">49</td>
+          <td class="num red">21</td>
+          <td class="num red">-21</td>
+          <td class="num gold">1.96</td>
+          <td class="num cyan">68.2%</td>
+          <td>⚓ Top Half</td>
+          <td>45.0%</td>
+          <td>72.7%</td>
+          <td>42.9%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🗡️ THE SPECIALIST</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#85</span></td>
+          <td><strong>PRITESH SURENDRA SHETTY</strong></td>
+          <td class="num gold">91</td>
+          <td class="num">66.7%</td>
+          <td>♂ Male</td>
+          <td class="num">39</td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num gold">2.33</td>
+          <td class="num cyan">65.9%</td>
+          <td>⚓ Top Half</td>
+          <td>53.3%</td>
+          <td>73.7%</td>
+          <td>80.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#86</span></td>
+          <td><strong>SIDDHARTH PAI</strong></td>
+          <td class="num gold">89</td>
+          <td class="num">77.4%</td>
+          <td>♂ Male</td>
+          <td class="num">31</td>
+          <td class="num red">7</td>
+          <td class="num red">-7</td>
+          <td class="num gold">2.87</td>
+          <td class="num cyan">63.6%</td>
+          <td>⚓ Top Half</td>
+          <td>83.3%</td>
+          <td>78.6%</td>
+          <td>60.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+          <td>🎯 THE SNIPER</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#87</span></td>
+          <td><strong>SAMUEL DSOUZA</strong></td>
+          <td class="num gold">84</td>
+          <td class="num">49.0%</td>
+          <td>♂ Male</td>
+          <td class="num">51</td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num gold">1.65</td>
+          <td class="num cyan">61.4%</td>
+          <td>⚓ Top Half</td>
+          <td>47.8%</td>
+          <td>45.5%</td>
+          <td>66.7%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#88</span></td>
+          <td><strong>MANJUNATHA D NAYAK</strong></td>
+          <td class="num gold">83</td>
+          <td class="num">57.1%</td>
+          <td>♂ Male</td>
+          <td class="num">42</td>
+          <td class="num red">18</td>
+          <td class="num red">-18</td>
+          <td class="num gold">1.98</td>
+          <td class="num cyan">59.1%</td>
+          <td>⚓ Top Half</td>
+          <td>40.0%</td>
+          <td>60.9%</td>
+          <td>66.7%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#90</span></td>
+          <td><strong>DHRUTHI K SHETTY</strong></td>
+          <td class="num gold">82</td>
+          <td class="num">55.8%</td>
+          <td>♀ Female</td>
+          <td class="num">43</td>
+          <td class="num red">19</td>
+          <td class="num red">-19</td>
+          <td class="num gold">1.91</td>
+          <td class="num cyan">56.8%</td>
+          <td>⚓ Top Half</td>
+          <td>61.1%</td>
+          <td>55.0%</td>
+          <td>40.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#91</span></td>
+          <td><strong>RASHI R</strong></td>
+          <td class="num gold">81</td>
+          <td class="num">49.0%</td>
+          <td>♀ Female</td>
+          <td class="num">49</td>
+          <td class="num red">25</td>
+          <td class="num red">-25</td>
+          <td class="num gold">1.65</td>
+          <td class="num cyan">54.5%</td>
+          <td>⚓ Top Half</td>
+          <td>44.4%</td>
+          <td>55.6%</td>
+          <td>46.2%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#93</span></td>
+          <td><strong>AYUSH SHETTY</strong></td>
+          <td class="num gold">80</td>
+          <td class="num">46.7%</td>
+          <td>♂ Male</td>
+          <td class="num">60</td>
+          <td class="num red">32</td>
+          <td class="num red">-32</td>
+          <td class="num gold">1.33</td>
+          <td class="num cyan">52.3%</td>
+          <td>⚓ Top Half</td>
+          <td>52.4%</td>
+          <td>70.0%</td>
+          <td>15.8%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#95</span></td>
+          <td><strong>EVAN RAYMOND LEWIS</strong></td>
+          <td class="num gold">79</td>
+          <td class="num">56.1%</td>
+          <td>♂ Male</td>
+          <td class="num">41</td>
+          <td class="num red">18</td>
+          <td class="num red">-18</td>
+          <td class="num gold">1.93</td>
+          <td class="num cyan">50.0%</td>
+          <td>⚓ Top Half</td>
+          <td>63.6%</td>
+          <td>57.1%</td>
+          <td>44.4%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#101</span></td>
+          <td><strong>SRUSHTI M</strong></td>
+          <td class="num gold">73</td>
+          <td class="num">51.1%</td>
+          <td>♀ Female</td>
+          <td class="num">47</td>
+          <td class="num red">23</td>
+          <td class="num red">-23</td>
+          <td class="num gold">1.55</td>
+          <td class="num cyan">47.7%</td>
+          <td>🌊 Lower Half</td>
+          <td>52.6%</td>
+          <td>66.7%</td>
+          <td>20.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#103</span></td>
+          <td><strong>ESHAN SUVARNA</strong></td>
+          <td class="num gold">69</td>
+          <td class="num">41.0%</td>
+          <td>♂ Male</td>
+          <td class="num">61</td>
+          <td class="num red">36</td>
+          <td class="num red">-36</td>
+          <td class="num gold">1.13</td>
+          <td class="num cyan">40.9%</td>
+          <td>🌊 Lower Half</td>
+          <td>30.0%</td>
+          <td>38.1%</td>
+          <td>55.0%</td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#104</span></td>
+          <td><strong>MANVITHA KULAL</strong></td>
+          <td class="num gold">69</td>
+          <td class="num">45.7%</td>
+          <td>♀ Female</td>
+          <td class="num">46</td>
+          <td class="num red">25</td>
+          <td class="num red">-25</td>
+          <td class="num gold">1.50</td>
+          <td class="num cyan">40.9%</td>
+          <td>🌊 Lower Half</td>
+          <td>21.4%</td>
+          <td>47.6%</td>
+          <td>72.7%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#105</span></td>
+          <td><strong>VIBHA V SHETTY</strong></td>
+          <td class="num gold">69</td>
+          <td class="num">50.0%</td>
+          <td>♀ Female</td>
+          <td class="num">46</td>
+          <td class="num red">23</td>
+          <td class="num red">-23</td>
+          <td class="num gold">1.50</td>
+          <td class="num cyan">40.9%</td>
+          <td>🌊 Lower Half</td>
+          <td>50.0%</td>
+          <td>56.2%</td>
+          <td>42.9%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#106</span></td>
+          <td><strong>VIKHYATH S</strong></td>
+          <td class="num gold">67</td>
+          <td class="num">57.6%</td>
+          <td>♂ Male</td>
+          <td class="num">33</td>
+          <td class="num red">14</td>
+          <td class="num red">-14</td>
+          <td class="num gold">2.03</td>
+          <td class="num cyan">34.1%</td>
+          <td>🌊 Lower Half</td>
+          <td>60.0%</td>
+          <td>33.3%</td>
+          <td>77.8%</td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#107</span></td>
+          <td><strong>DAKSH J SHETTY</strong></td>
+          <td class="num gold">67</td>
+          <td class="num">55.3%</td>
+          <td>♂ Male</td>
+          <td class="num">38</td>
+          <td class="num red">17</td>
+          <td class="num red">-17</td>
+          <td class="num gold">1.76</td>
+          <td class="num cyan">34.1%</td>
+          <td>🌊 Lower Half</td>
+          <td>45.5%</td>
+          <td>66.7%</td>
+          <td>44.4%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#108</span></td>
+          <td><strong>AHAN RAVIRAJA BHAT</strong></td>
+          <td class="num gold">67</td>
+          <td class="num">55.3%</td>
+          <td>♂ Male</td>
+          <td class="num">38</td>
+          <td class="num red">17</td>
+          <td class="num red">-17</td>
+          <td class="num gold">1.76</td>
+          <td class="num cyan">34.1%</td>
+          <td>🌊 Lower Half</td>
+          <td>53.8%</td>
+          <td>55.0%</td>
+          <td>60.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#110</span></td>
+          <td><strong>SUSHANTH A G</strong></td>
+          <td class="num gold">65</td>
+          <td class="num">46.0%</td>
+          <td>♂ Male</td>
+          <td class="num">50</td>
+          <td class="num red">27</td>
+          <td class="num red">-27</td>
+          <td class="num gold">1.30</td>
+          <td class="num cyan">29.5%</td>
+          <td>🌊 Lower Half</td>
+          <td>52.9%</td>
+          <td>50.0%</td>
+          <td>30.8%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#111</span></td>
+          <td><strong>PRATHEETH R SHETTY</strong></td>
+          <td class="num gold">65</td>
+          <td class="num">48.9%</td>
+          <td>♂ Male</td>
+          <td class="num">45</td>
+          <td class="num red">23</td>
+          <td class="num red">-23</td>
+          <td class="num gold">1.44</td>
+          <td class="num cyan">29.5%</td>
+          <td>🌊 Lower Half</td>
+          <td>42.1%</td>
+          <td>70.6%</td>
+          <td>22.2%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#112</span></td>
+          <td><strong>PREETI SINGH</strong></td>
+          <td class="num gold">63</td>
+          <td class="num">44.7%</td>
+          <td>♀ Female</td>
+          <td class="num">47</td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num gold">1.34</td>
+          <td class="num cyan">27.3%</td>
+          <td>🌊 Lower Half</td>
+          <td>58.8%</td>
+          <td>38.1%</td>
+          <td>33.3%</td>
+          <td class="green">Physics</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#113</span></td>
+          <td><strong>BHOWMIK SHETTY</strong></td>
+          <td class="num gold">60</td>
+          <td class="num">54.3%</td>
+          <td>♂ Male</td>
+          <td class="num">35</td>
+          <td class="num red">16</td>
+          <td class="num red">-16</td>
+          <td class="num gold">1.71</td>
+          <td class="num cyan">25.0%</td>
+          <td>🌊 Lower Half</td>
+          <td>50.0%</td>
+          <td>64.3%</td>
+          <td>45.5%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#115</span></td>
+          <td><strong>SHAN SHEREGAR</strong></td>
+          <td class="num gold">57</td>
+          <td class="num">54.5%</td>
+          <td>♂ Male</td>
+          <td class="num">33</td>
+          <td class="num red">15</td>
+          <td class="num red">-15</td>
+          <td class="num gold">1.73</td>
+          <td class="num cyan">20.5%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>70.0%</td>
+          <td>42.1%</td>
+          <td>75.0%</td>
+          <td class="green">Physics</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#116</span></td>
+          <td><strong>SHALMALI R PRABHU</strong></td>
+          <td class="num gold">57</td>
+          <td class="num">60.7%</td>
+          <td>♀ Female</td>
+          <td class="num">28</td>
+          <td class="num red">11</td>
+          <td class="num red">-11</td>
+          <td class="num gold">2.04</td>
+          <td class="num cyan">20.5%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>55.6%</td>
+          <td>69.2%</td>
+          <td>50.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#117</span></td>
+          <td><strong>SHRIKRISHNA HEBBAR</strong></td>
+          <td class="num gold">56</td>
+          <td class="num">45.5%</td>
+          <td>♂ Male</td>
+          <td class="num">44</td>
+          <td class="num red">24</td>
+          <td class="num red">-24</td>
+          <td class="num gold">1.27</td>
+          <td class="num cyan">18.2%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>25.0%</td>
+          <td>50.0%</td>
+          <td>57.1%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#123</span></td>
+          <td><strong>VAISHNAVI NAYAK</strong></td>
+          <td class="num gold">50</td>
+          <td class="num">42.2%</td>
+          <td>♀ Female</td>
+          <td class="num">45</td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num gold">1.11</td>
+          <td class="num cyan">15.9%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>25.0%</td>
+          <td>52.9%</td>
+          <td>50.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#125</span></td>
+          <td><strong>JITIN RAJ SHETTY</strong></td>
+          <td class="num gold">48</td>
+          <td class="num">42.9%</td>
+          <td>♂ Male</td>
+          <td class="num">42</td>
+          <td class="num red">24</td>
+          <td class="num red">-24</td>
+          <td class="num gold">1.14</td>
+          <td class="num cyan">13.6%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>35.3%</td>
+          <td>52.9%</td>
+          <td>37.5%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#127</span></td>
+          <td><strong>NAMASYU RAVI KOTIAN</strong></td>
+          <td class="num gold">47</td>
+          <td class="num">53.6%</td>
+          <td>♂ Male</td>
+          <td class="num">28</td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num gold">1.68</td>
+          <td class="num cyan">11.4%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>54.5%</td>
+          <td>50.0%</td>
+          <td>55.6%</td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#130</span></td>
+          <td><strong>SALOMI DSOUZA</strong></td>
+          <td class="num gold">40</td>
+          <td class="num">35.0%</td>
+          <td>♀ Female</td>
+          <td class="num">40</td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num gold">1.00</td>
+          <td class="num cyan">9.1%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>35.3%</td>
+          <td>35.0%</td>
+          <td>33.3%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#131</span></td>
+          <td><strong>ADVIK N SHETTY</strong></td>
+          <td class="num gold">39</td>
+          <td class="num">50.0%</td>
+          <td>♂ Male</td>
+          <td class="num">26</td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num gold">1.50</td>
+          <td class="num cyan">4.5%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>40.0%</td>
+          <td>36.4%</td>
+          <td>100.0%</td>
+          <td class="green">Maths</td>
+          <td class="red">Chemistry</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#132</span></td>
+          <td><strong>AADHYA LOKESH HEGDE</strong></td>
+          <td class="num gold">39</td>
+          <td class="num">50.0%</td>
+          <td>♀ Female</td>
+          <td class="num">26</td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num gold">1.50</td>
+          <td class="num cyan">4.5%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>58.3%</td>
+          <td>50.0%</td>
+          <td>0.0%</td>
+          <td class="green">Physics</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+          <td>🧭 THE NAVIGATOR</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#140</span></td>
+          <td><strong>SRAJAN NAVEEN</strong></td>
+          <td class="num gold">25</td>
+          <td class="num">31.1%</td>
+          <td>♂ Male</td>
+          <td class="num">45</td>
+          <td class="num red">31</td>
+          <td class="num red">-31</td>
+          <td class="num gold">0.56</td>
+          <td class="num cyan">2.3%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>28.6%</td>
+          <td>35.7%</td>
+          <td>29.4%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr>
+        <tr>
+          <td><span class="rank-badge">#142</span></td>
+          <td><strong>PRATHVI PRABHU</strong></td>
+          <td class="num gold">17</td>
+          <td class="num">27.1%</td>
+          <td>♂ Male</td>
+          <td class="num">48</td>
+          <td class="num red">35</td>
+          <td class="num red">-35</td>
+          <td class="num gold">0.35</td>
+          <td class="num cyan">0.0%</td>
+          <td>🪝 Bottom 25%</td>
+          <td>26.7%</td>
+          <td>29.4%</td>
+          <td>25.0%</td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+          <td>💣 THE CANNONBALL</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── SUBJECTS ── -->
+  <div class="section" id="subjects">
+    <div class="section-title">🎯 Subject Accuracy Across the Fleet</div>
+    <div class="section-sub">average accuracy per subject — how sharp be each cannon?</div>
+    
+        <div class="subj-bar-row">
+          <span class="subj-label">⚛️ Physics</span>
+          <div class="subj-bar-wrap"><div style="background:#1e160a;border-radius:3px;height:14px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:51.4%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div></div>
+          <span class="subj-pct">51.4%</span>
+        </div>
+        <div class="subj-bar-row">
+          <span class="subj-label">🧪 Chemistry</span>
+          <div class="subj-bar-wrap"><div style="background:#1e160a;border-radius:3px;height:14px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:57.4%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div></div>
+          <span class="subj-pct">57.4%</span>
+        </div>
+        <div class="subj-bar-row">
+          <span class="subj-label">📐 Maths</span>
+          <div class="subj-bar-wrap"><div style="background:#1e160a;border-radius:3px;height:14px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:58.3%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div></div>
+          <span class="subj-pct">58.3%</span>
+        </div>
+  </div>
+
+  <!-- ── GENDER DUEL ── -->
+  <div class="section" id="gender">
+    <div class="section-title">⚧ Gender Duel — Who Rules the Seas?</div>
+    <div class="section-sub">male vs female crew — stats, subject dominance, and the final verdict</div>
+    <div class="gender-grid">
+      <div class="gender-card male">
+        <h3>♂ Male Crew — 30 sailors</h3>
+        <div class="gc-row"><span>Avg Score</span><span class="gc-val">87.5</span></div><div class="gc-row"><span>Avg Accuracy</span><span class="gc-val">57.0%</span></div><div class="gc-row"><span>Best Rank</span><span class="gc-val">#34 — PRATHAM BHANDARY</span></div><div class="gc-row"><span>Top Score</span><span class="gc-val">176 — PRATHAM BHANDARY</span></div><div class="gc-row"><span>Phy/Chem/Math</span><span class="gc-val">52.3% / 58.2% / 61.6%</span></div>
+      </div>
+      <div class="gender-card female">
+        <h3>♀ Female Crew — 14 sailors</h3>
+        <div class="gc-row"><span>Avg Score</span><span class="gc-val">76.6</span></div><div class="gc-row"><span>Avg Accuracy</span><span class="gc-val">53.6%</span></div><div class="gc-row"><span>Best Rank</span><span class="gc-val">#53 — SAMRUDHI D SHETTY</span></div><div class="gc-row"><span>Top Score</span><span class="gc-val">146 — SAMRUDHI D SHETTY</span></div><div class="gc-row"><span>Phy/Chem/Math</span><span class="gc-val">49.5% / 55.7% / 51.1%</span></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Category</th><th class="cyan">♂ Male</th><th class="magenta">♀ Female</th><th>Winner</th></tr></thead>
+        <tbody><tr><td>Avg Score</td><td class='cyan'>87.5</td><td class='magenta'>76.6</td><td><span class="cyan">♂ MALE</span></td></tr><tr><td>Avg Accuracy</td><td class='cyan'>57.0</td><td class='magenta'>53.6</td><td><span class="cyan">♂ MALE</span></td></tr><tr><td>Physics Acc</td><td class='cyan'>52.3</td><td class='magenta'>49.5</td><td><span class="cyan">♂ MALE</span></td></tr><tr><td>Chemistry Acc</td><td class='cyan'>58.2</td><td class='magenta'>55.7</td><td><span class="cyan">♂ MALE</span></td></tr><tr><td>Maths Acc</td><td class='cyan'>61.6</td><td class='magenta'>51.1</td><td><span class="cyan">♂ MALE</span></td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── NEGATIVE MARKING ── -->
+  <div class="section" id="damage">
+    <div class="section-title">💀 Negative Marking Damage Report</div>
+    <div class="section-sub">who bled marks firin' cannons they had no business touchin' (+4 correct, -1 wrong)</div>
+    <div class="table-wrap">
+      <table id="damage-table">
+        <thead><tr>
+          <th>Name</th>
+          <th class="sort">Wrong Ans</th><th class="sort">Marks Lost</th>
+          <th class="sort">Gross Score</th><th class="sort">Damage %</th>
+          <th>Severity</th>
+        </tr></thead>
+        <tbody><tr>
+          <td><strong>ESHAN SUVARNA</strong></td>
+          <td class="num red">36</td>
+          <td class="num red">-36</td>
+          <td class="num">100</td>
+          <td class="num gold">36.0%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>PRATHVI PRABHU</strong></td>
+          <td class="num red">35</td>
+          <td class="num red">-35</td>
+          <td class="num">52</td>
+          <td class="num gold">67.3%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>AYUSH SHETTY</strong></td>
+          <td class="num red">32</td>
+          <td class="num red">-32</td>
+          <td class="num">112</td>
+          <td class="num gold">28.6%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>SRAJAN NAVEEN</strong></td>
+          <td class="num red">31</td>
+          <td class="num red">-31</td>
+          <td class="num">56</td>
+          <td class="num gold">55.4%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>SUSHANTH A G</strong></td>
+          <td class="num red">27</td>
+          <td class="num red">-27</td>
+          <td class="num">92</td>
+          <td class="num gold">29.3%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>SAMUEL DSOUZA</strong></td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num">100</td>
+          <td class="num gold">26.0%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>PREETI SINGH</strong></td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num">84</td>
+          <td class="num gold">31.0%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>SALOMI DSOUZA</strong></td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num">56</td>
+          <td class="num gold">46.4%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>VAISHNAVI NAYAK</strong></td>
+          <td class="num red">26</td>
+          <td class="num red">-26</td>
+          <td class="num">76</td>
+          <td class="num gold">34.2%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>MANVITHA KULAL</strong></td>
+          <td class="num red">25</td>
+          <td class="num red">-25</td>
+          <td class="num">84</td>
+          <td class="num gold">29.8%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>RASHI R</strong></td>
+          <td class="num red">25</td>
+          <td class="num red">-25</td>
+          <td class="num">96</td>
+          <td class="num gold">26.0%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>JITIN RAJ SHETTY</strong></td>
+          <td class="num red">24</td>
+          <td class="num red">-24</td>
+          <td class="num">72</td>
+          <td class="num gold">33.3%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>SHRIKRISHNA HEBBAR</strong></td>
+          <td class="num red">24</td>
+          <td class="num red">-24</td>
+          <td class="num">80</td>
+          <td class="num gold">30.0%</td>
+          <td><span class="badge badge-red">💀 CATASTROPHIC</span></td>
+        </tr><tr>
+          <td><strong>SRUSHTI M</strong></td>
+          <td class="num red">23</td>
+          <td class="num red">-23</td>
+          <td class="num">96</td>
+          <td class="num gold">24.0%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>VIBHA V SHETTY</strong></td>
+          <td class="num red">23</td>
+          <td class="num red">-23</td>
+          <td class="num">92</td>
+          <td class="num gold">25.0%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>PRATHEETH R SHETTY</strong></td>
+          <td class="num red">23</td>
+          <td class="num red">-23</td>
+          <td class="num">88</td>
+          <td class="num gold">26.1%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>MANYA H ANCHAN</strong></td>
+          <td class="num red">21</td>
+          <td class="num red">-21</td>
+          <td class="num">112</td>
+          <td class="num gold">18.8%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>TARUN M SHETTY</strong></td>
+          <td class="num red">21</td>
+          <td class="num red">-21</td>
+          <td class="num">136</td>
+          <td class="num gold">15.4%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>KAUSTUBHA H</strong></td>
+          <td class="num red">20</td>
+          <td class="num red">-20</td>
+          <td class="num">156</td>
+          <td class="num gold">12.8%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>DHRUTHI K SHETTY</strong></td>
+          <td class="num red">19</td>
+          <td class="num red">-19</td>
+          <td class="num">96</td>
+          <td class="num gold">19.8%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>HARSHAD P KOTIAN</strong></td>
+          <td class="num red">19</td>
+          <td class="num red">-19</td>
+          <td class="num">136</td>
+          <td class="num gold">14.0%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>SNEHAL HEGDE</strong></td>
+          <td class="num red">18</td>
+          <td class="num red">-18</td>
+          <td class="num">124</td>
+          <td class="num gold">14.5%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>EVAN RAYMOND LEWIS</strong></td>
+          <td class="num red">18</td>
+          <td class="num red">-18</td>
+          <td class="num">92</td>
+          <td class="num gold">19.6%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>MANJUNATHA D NAYAK</strong></td>
+          <td class="num red">18</td>
+          <td class="num red">-18</td>
+          <td class="num">96</td>
+          <td class="num gold">18.8%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>DAKSH J SHETTY</strong></td>
+          <td class="num red">17</td>
+          <td class="num red">-17</td>
+          <td class="num">84</td>
+          <td class="num gold">20.2%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>AHAN RAVIRAJA BHAT</strong></td>
+          <td class="num red">17</td>
+          <td class="num red">-17</td>
+          <td class="num">84</td>
+          <td class="num gold">20.2%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>SATHWIK RAJ KUMBHASHI</strong></td>
+          <td class="num red">16</td>
+          <td class="num red">-16</td>
+          <td class="num">160</td>
+          <td class="num gold">10.0%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>TANMAYA P BHANDARKAR</strong></td>
+          <td class="num red">16</td>
+          <td class="num red">-16</td>
+          <td class="num">116</td>
+          <td class="num gold">13.8%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>BHOWMIK SHETTY</strong></td>
+          <td class="num red">16</td>
+          <td class="num red">-16</td>
+          <td class="num">76</td>
+          <td class="num gold">21.1%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>HARIKEERTHAN NAYAK</strong></td>
+          <td class="num red">15</td>
+          <td class="num red">-15</td>
+          <td class="num">168</td>
+          <td class="num gold">8.9%</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+        </tr><tr>
+          <td><strong>SAARANG BHAGAVATH</strong></td>
+          <td class="num red">15</td>
+          <td class="num red">-15</td>
+          <td class="num">148</td>
+          <td class="num gold">10.1%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>SHAN SHEREGAR</strong></td>
+          <td class="num red">15</td>
+          <td class="num red">-15</td>
+          <td class="num">72</td>
+          <td class="num gold">20.8%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>ARJUN SHETTY</strong></td>
+          <td class="num red">14</td>
+          <td class="num red">-14</td>
+          <td class="num">116</td>
+          <td class="num gold">12.1%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>PREETHI G BHAT</strong></td>
+          <td class="num red">14</td>
+          <td class="num red">-14</td>
+          <td class="num">116</td>
+          <td class="num gold">12.1%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>VIKHYATH S</strong></td>
+          <td class="num red">14</td>
+          <td class="num red">-14</td>
+          <td class="num">76</td>
+          <td class="num gold">18.4%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>PRATHAM BHANDARY</strong></td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num">184</td>
+          <td class="num gold">7.1%</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+        </tr><tr>
+          <td><strong>AADHYA LOKESH HEGDE</strong></td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num">52</td>
+          <td class="num gold">25.0%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>ADVIK N SHETTY</strong></td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num">52</td>
+          <td class="num gold">25.0%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>PRITESH SURENDRA SHETTY</strong></td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num">104</td>
+          <td class="num gold">12.5%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>NAMASYU RAVI KOTIAN</strong></td>
+          <td class="num red">13</td>
+          <td class="num red">-13</td>
+          <td class="num">60</td>
+          <td class="num gold">21.7%</td>
+          <td><span class="badge badge-red">🩸 Severe</span></td>
+        </tr><tr>
+          <td><strong>AMOGH U ACHARYA</strong></td>
+          <td class="num red">12</td>
+          <td class="num red">-12</td>
+          <td class="num">160</td>
+          <td class="num gold">7.5%</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+        </tr><tr>
+          <td><strong>SAMRUDHI D SHETTY</strong></td>
+          <td class="num red">11</td>
+          <td class="num red">-11</td>
+          <td class="num">152</td>
+          <td class="num gold">7.2%</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+        </tr><tr>
+          <td><strong>SHALMALI R PRABHU</strong></td>
+          <td class="num red">11</td>
+          <td class="num red">-11</td>
+          <td class="num">68</td>
+          <td class="num gold">16.2%</td>
+          <td><span class="badge badge-yellow">⚠ Moderate</span></td>
+        </tr><tr>
+          <td><strong>SIDDHARTH PAI</strong></td>
+          <td class="num red">7</td>
+          <td class="num red">-7</td>
+          <td class="num">96</td>
+          <td class="num gold">7.3%</td>
+          <td><span class="badge badge-green">✔ Controlled</span></td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── DANGER ZONE ── -->
+  <div class="section" id="danger">
+    <div class="section-title">⚠️ Danger Zone — Ships Adrift Near the Whirlpool</div>
+    <div class="section-sub">sailors within ±15 marks of the fleet median (79)</div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th class="sort">Score</th><th class="sort">Gap vs Median</th><th>Rank</th><th>Gender</th></tr></thead>
+        <tbody><tr><td><strong>PRITESH SURENDRA SHETTY</strong></td><td class='num gold'>91</td><td class='green'>🟢 +12</td><td>#85</td><td>Male</td></tr><tr><td><strong>SIDDHARTH PAI</strong></td><td class='num gold'>89</td><td class='green'>🟢 +10</td><td>#86</td><td>Male</td></tr><tr><td><strong>SAMUEL DSOUZA</strong></td><td class='num gold'>84</td><td class='green'>🟢 +5</td><td>#87</td><td>Male</td></tr><tr><td><strong>MANJUNATHA D NAYAK</strong></td><td class='num gold'>83</td><td class='green'>🟢 +4</td><td>#88</td><td>Male</td></tr><tr><td><strong>DHRUTHI K SHETTY</strong></td><td class='num gold'>82</td><td class='green'>🟢 +3</td><td>#90</td><td>Female</td></tr><tr><td><strong>RASHI R</strong></td><td class='num gold'>81</td><td class='green'>🟢 +2</td><td>#91</td><td>Female</td></tr><tr><td><strong>AYUSH SHETTY</strong></td><td class='num gold'>80</td><td class='green'>🟢 +1</td><td>#93</td><td>Male</td></tr><tr><td><strong>EVAN RAYMOND LEWIS</strong></td><td class='num gold'>79</td><td class='green'>🟢 +0</td><td>#95</td><td>Male</td></tr><tr><td><strong>SRUSHTI M</strong></td><td class='num gold'>73</td><td class='red'>🔴 -6</td><td>#101</td><td>Female</td></tr><tr><td><strong>VIBHA V SHETTY</strong></td><td class='num gold'>69</td><td class='red'>🔴 -10</td><td>#105</td><td>Female</td></tr><tr><td><strong>MANVITHA KULAL</strong></td><td class='num gold'>69</td><td class='red'>🔴 -10</td><td>#104</td><td>Female</td></tr><tr><td><strong>ESHAN SUVARNA</strong></td><td class='num gold'>69</td><td class='red'>🔴 -10</td><td>#103</td><td>Male</td></tr><tr><td><strong>DAKSH J SHETTY</strong></td><td class='num gold'>67</td><td class='red'>🔴 -12</td><td>#107</td><td>Male</td></tr><tr><td><strong>AHAN RAVIRAJA BHAT</strong></td><td class='num gold'>67</td><td class='red'>🔴 -12</td><td>#108</td><td>Male</td></tr><tr><td><strong>VIKHYATH S</strong></td><td class='num gold'>67</td><td class='red'>🔴 -12</td><td>#106</td><td>Male</td></tr><tr><td><strong>PRATHEETH R SHETTY</strong></td><td class='num gold'>65</td><td class='red'>🔴 -14</td><td>#111</td><td>Male</td></tr><tr><td><strong>SUSHANTH A G</strong></td><td class='num gold'>65</td><td class='red'>🔴 -14</td><td>#110</td><td>Male</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── CARRY / DRAG ── -->
+  <div class="section" id="carry">
+    <div class="section-title">⚖️ Subject Carry vs Drag — Anchor or Wind?</div>
+    <div class="section-sub">which subject floats each ship — and which drags it under</div>
+    <div class="duel-wrap" style="margin-bottom:26px">
+      <div>
+        <div style="color:var(--green);font-family:'Uncial Antiqua',serif;font-size:.9rem;margin-bottom:12px;letter-spacing:.06em">🌬️ Fleet Carry Subjects</div>
+        <div class='bar-row'><span>Physics</span><div style="background:#1e160a;border-radius:3px;height:8px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:15.9%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div><span class='num gold'>7 sailors</span></div><div class='bar-row'><span>Chemistry</span><div style="background:#1e160a;border-radius:3px;height:8px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:72.7%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div><span class='num gold'>32 sailors</span></div><div class='bar-row'><span>Maths</span><div style="background:#1e160a;border-radius:3px;height:8px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:11.4%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div><span class='num gold'>5 sailors</span></div>
+      </div>
+      <div>
+        <div style="color:var(--red);font-family:'Uncial Antiqua',serif;font-size:.9rem;margin-bottom:12px;letter-spacing:.06em">⚓ Fleet Drag Subjects</div>
+        <div class='bar-row'><span>Physics</span><div style="background:#1e160a;border-radius:3px;height:8px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:29.5%;height:100%;background:#8b2e0a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #8b2e0a55"></div></div><span class='num red'>13 sailors</span></div><div class='bar-row'><span>Chemistry</span><div style="background:#1e160a;border-radius:3px;height:8px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:11.4%;height:100%;background:#8b2e0a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #8b2e0a55"></div></div><span class='num red'>5 sailors</span></div><div class='bar-row'><span>Maths</span><div style="background:#1e160a;border-radius:3px;height:8px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:59.1%;height:100%;background:#8b2e0a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #8b2e0a55"></div></div><span class='num red'>26 sailors</span></div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Name</th><th>Carries</th><th>Drags</th><th class="sort">Carry Gap</th><th class="sort">Drag Gap</th></tr></thead>
+        <tbody><tr>
+          <td><strong>MANYA H ANCHAN</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+31</td>
+          <td class="num red">-24</td>
+        </tr><tr>
+          <td><strong>SATHWIK RAJ KUMBHASHI</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+27</td>
+          <td class="num red">-24</td>
+        </tr><tr>
+          <td><strong>SNEHAL HEGDE</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+26</td>
+          <td class="num red">-34</td>
+        </tr><tr>
+          <td><strong>AMOGH U ACHARYA</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+26</td>
+          <td class="num red">-36</td>
+        </tr><tr>
+          <td><strong>MANJUNATHA D NAYAK</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+24</td>
+          <td class="num red">-18</td>
+        </tr><tr>
+          <td><strong>AYUSH SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+23</td>
+          <td class="num red">-31</td>
+        </tr><tr>
+          <td><strong>HARSHAD P KOTIAN</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+22</td>
+          <td class="num red">-21</td>
+        </tr><tr>
+          <td><strong>PRATHEETH R SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+21</td>
+          <td class="num red">-21</td>
+        </tr><tr>
+          <td><strong>PRITESH SURENDRA SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+21</td>
+          <td class="num red">-15</td>
+        </tr><tr>
+          <td><strong>DAKSH J SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+20</td>
+          <td class="num red">-11</td>
+        </tr><tr>
+          <td><strong>ARJUN SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+18</td>
+          <td class="num red">-10</td>
+        </tr><tr>
+          <td><strong>SRUSHTI M</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+18</td>
+          <td class="num red">-24</td>
+        </tr><tr>
+          <td><strong>EVAN RAYMOND LEWIS</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+18</td>
+          <td class="num red">-15</td>
+        </tr><tr>
+          <td><strong>HARIKEERTHAN NAYAK</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td class="num green">+17</td>
+          <td class="num red">-17</td>
+        </tr><tr>
+          <td><strong>SAARANG BHAGAVATH</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+17</td>
+          <td class="num red">-18</td>
+        </tr><tr>
+          <td><strong>MANVITHA KULAL</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+16</td>
+          <td class="num red">-22</td>
+        </tr><tr>
+          <td><strong>RASHI R</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+15</td>
+          <td class="num red">-10</td>
+        </tr><tr>
+          <td><strong>SHALMALI R PRABHU</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+13</td>
+          <td class="num red">-10</td>
+        </tr><tr>
+          <td><strong>DHRUTHI K SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+13</td>
+          <td class="num red">-22</td>
+        </tr><tr>
+          <td><strong>AHAN RAVIRAJA BHAT</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+13</td>
+          <td class="num red">-12</td>
+        </tr><tr>
+          <td><strong>PRATHAM BHANDARY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+12</td>
+          <td class="num red">-8</td>
+        </tr><tr>
+          <td><strong>PREETI SINGH</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Maths</td>
+          <td class="num green">+12</td>
+          <td class="num red">-15</td>
+        </tr><tr>
+          <td><strong>ESHAN SUVARNA</strong></td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td class="num green">+12</td>
+          <td class="num red">-13</td>
+        </tr><tr>
+          <td><strong>JITIN RAJ SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+12</td>
+          <td class="num red">-9</td>
+        </tr><tr>
+          <td><strong>SALOMI DSOUZA</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+12</td>
+          <td class="num red">-11</td>
+        </tr><tr>
+          <td><strong>VAISHNAVI NAYAK</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+11</td>
+          <td class="num red">-13</td>
+        </tr><tr>
+          <td><strong>SIDDHARTH PAI</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+11</td>
+          <td class="num red">-20</td>
+        </tr><tr>
+          <td><strong>BHOWMIK SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+11</td>
+          <td class="num red">-6</td>
+        </tr><tr>
+          <td><strong>AADHYA LOKESH HEGDE</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Maths</td>
+          <td class="num green">+10</td>
+          <td class="num red">-15</td>
+        </tr><tr>
+          <td><strong>SAMUEL DSOUZA</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+10</td>
+          <td class="num red">-14</td>
+        </tr><tr>
+          <td><strong>TARUN M SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+10</td>
+          <td class="num red">-9</td>
+        </tr><tr>
+          <td><strong>TANMAYA P BHANDARKAR</strong></td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td class="num green">+9</td>
+          <td class="num red">-9</td>
+        </tr><tr>
+          <td><strong>PREETHI G BHAT</strong></td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td class="num green">+8</td>
+          <td class="num red">-5</td>
+        </tr><tr>
+          <td><strong>SUSHANTH A G</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+8</td>
+          <td class="num red">-15</td>
+        </tr><tr>
+          <td><strong>SHRIKRISHNA HEBBAR</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+8</td>
+          <td class="num red">-16</td>
+        </tr><tr>
+          <td><strong>VIKHYATH S</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td class="num green">+8</td>
+          <td class="num red">-11</td>
+        </tr><tr>
+          <td><strong>KAUSTUBHA H</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td class="num green">+7</td>
+          <td class="num red">-5</td>
+        </tr><tr>
+          <td><strong>ADVIK N SHETTY</strong></td>
+          <td class="green">Maths</td>
+          <td class="red">Chemistry</td>
+          <td class="num green">+7</td>
+          <td class="num red">-4</td>
+        </tr><tr>
+          <td><strong>VIBHA V SHETTY</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+6</td>
+          <td class="num red">-7</td>
+        </tr><tr>
+          <td><strong>SHAN SHEREGAR</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Maths</td>
+          <td class="num green">+6</td>
+          <td class="num red">-8</td>
+        </tr><tr>
+          <td><strong>SAMRUDHI D SHETTY</strong></td>
+          <td class="green">Maths</td>
+          <td class="red">Physics</td>
+          <td class="num green">+3</td>
+          <td class="num red">-6</td>
+        </tr><tr>
+          <td><strong>NAMASYU RAVI KOTIAN</strong></td>
+          <td class="green">Physics</td>
+          <td class="red">Chemistry</td>
+          <td class="num green">+3</td>
+          <td class="num red">-4</td>
+        </tr><tr>
+          <td><strong>SRAJAN NAVEEN</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Physics</td>
+          <td class="num green">+3</td>
+          <td class="num red">-2</td>
+        </tr><tr>
+          <td><strong>PRATHVI PRABHU</strong></td>
+          <td class="green">Chemistry</td>
+          <td class="red">Maths</td>
+          <td class="num green">+2</td>
+          <td class="num red">-2</td>
+        </tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── ARCHETYPES ── -->
+  <div class="section" id="archetypes">
+    <div class="section-title">🎭 Fleet Personality Archetypes</div>
+    <div class="section-sub">every sailor be a certain breed — which one are ye?</div>
+    <div class="archetype-legend">
+      <div class="arch-chip" title="High attempts + high accuracy.">🏴‍☠️ The Admiral</div>
+      <div class="arch-chip" title="Few shots, each deadly.">🎯 The Sniper</div>
+      <div class="arch-chip" title="Fires at everything, hits nothing.">🎲 The Gambler</div>
+      <div class="arch-chip" title="Negative marking nightmare.">💣 The Cannonball</div>
+      <div class="arch-chip" title="All subjects in harmony.">⚖️ The Balanced Sage</div>
+      <div class="arch-chip" title="One subject god.">🗡️ The Specialist</div>
+      <div class="arch-chip" title="Steady. Dependable.">⚓ The Reliable Hand</div>
+      <div class="arch-chip" title="Works hard, treasure slips away.">🌊 The Grinder</div>
+      <div class="arch-chip" title="Barely showed up.">😴 The Ghost</div>
+      <div class="arch-chip" title="Steady middlin' waters.">🧭 The Navigator</div>
+    </div>
+    <div class="table-wrap">
+      <table id="arch-table">
+        <thead><tr><th class="sort">Rank</th><th>Name</th><th>Score</th><th>Gender</th><th>Archetype</th><th>Description</th></tr></thead>
+        <tbody><tr><td><span class='rank-badge'>#34</span></td><td><strong>PRATHAM BHANDARY</strong></td><td class='num gold'>176</td><td>♂ Male</td><td style='color:#c8922a'>⚓ THE RELIABLE HAND</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Steady and dependable. Not flashy — just gets it done.</td></tr><tr><td><span class='rank-badge'>#41</span></td><td><strong>HARIKEERTHAN NAYAK</strong></td><td class='num gold'>158</td><td>♂ Male</td><td style='color:#c8922a'>⚓ THE RELIABLE HAND</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Steady and dependable. Not flashy — just gets it done.</td></tr><tr><td><span class='rank-badge'>#48</span></td><td><strong>AMOGH U ACHARYA</strong></td><td class='num gold'>153</td><td>♂ Male</td><td style='color:#c8922a'>🗡️ THE SPECIALIST</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>One subject god — the other two be cursed waters.</td></tr><tr><td><span class='rank-badge'>#51</span></td><td><strong>SATHWIK RAJ KUMBHASHI</strong></td><td class='num gold'>149</td><td>♂ Male</td><td style='color:#c8922a'>🗡️ THE SPECIALIST</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>One subject god — the other two be cursed waters.</td></tr><tr><td><span class='rank-badge'>#53</span></td><td><strong>SAMRUDHI D SHETTY</strong></td><td class='num gold'>146</td><td>♀ Female</td><td style='color:#a0d8e8'>⚖️ THE BALANCED SAGE</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>All three subjects singin' in perfect harmony.</td></tr><tr><td><span class='rank-badge'>#58</span></td><td><strong>KAUSTUBHA H</strong></td><td class='num gold'>141</td><td>♂ Male</td><td style='color:#a0d8e8'>⚖️ THE BALANCED SAGE</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>All three subjects singin' in perfect harmony.</td></tr><tr><td><span class='rank-badge'>#60</span></td><td><strong>SAARANG BHAGAVATH</strong></td><td class='num gold'>138</td><td>♂ Male</td><td style='color:#c8922a'>⚓ THE RELIABLE HAND</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Steady and dependable. Not flashy — just gets it done.</td></tr><tr><td><span class='rank-badge'>#66</span></td><td><strong>HARSHAD P KOTIAN</strong></td><td class='num gold'>122</td><td>♂ Male</td><td style='color:#c8922a'>⚓ THE RELIABLE HAND</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Steady and dependable. Not flashy — just gets it done.</td></tr><tr><td><span class='rank-badge'>#69</span></td><td><strong>TARUN M SHETTY</strong></td><td class='num gold'>115</td><td>♂ Male</td><td style='color:#a0d8e8'>⚖️ THE BALANCED SAGE</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>All three subjects singin' in perfect harmony.</td></tr><tr><td><span class='rank-badge'>#72</span></td><td><strong>SNEHAL HEGDE</strong></td><td class='num gold'>111</td><td>♂ Male</td><td style='color:#c8922a'>🗡️ THE SPECIALIST</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>One subject god — the other two be cursed waters.</td></tr><tr><td><span class='rank-badge'>#74</span></td><td><strong>PREETHI G BHAT</strong></td><td class='num gold'>107</td><td>♀ Female</td><td style='color:#a0d8e8'>⚖️ THE BALANCED SAGE</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>All three subjects singin' in perfect harmony.</td></tr><tr><td><span class='rank-badge'>#75</span></td><td><strong>ARJUN SHETTY</strong></td><td class='num gold'>107</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#79</span></td><td><strong>TANMAYA P BHANDARKAR</strong></td><td class='num gold'>100</td><td>♀ Female</td><td style='color:#a0d8e8'>⚖️ THE BALANCED SAGE</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>All three subjects singin' in perfect harmony.</td></tr><tr><td><span class='rank-badge'>#81</span></td><td><strong>MANYA H ANCHAN</strong></td><td class='num gold'>96</td><td>♀ Female</td><td style='color:#c8922a'>🗡️ THE SPECIALIST</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>One subject god — the other two be cursed waters.</td></tr><tr><td><span class='rank-badge'>#85</span></td><td><strong>PRITESH SURENDRA SHETTY</strong></td><td class='num gold'>91</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#86</span></td><td><strong>SIDDHARTH PAI</strong></td><td class='num gold'>89</td><td>♂ Male</td><td style='color:#7ecb8a'>🎯 THE SNIPER</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Few shots fired, each one deadly. Quality over quantity.</td></tr><tr><td><span class='rank-badge'>#87</span></td><td><strong>SAMUEL DSOUZA</strong></td><td class='num gold'>84</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#88</span></td><td><strong>MANJUNATHA D NAYAK</strong></td><td class='num gold'>83</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#90</span></td><td><strong>DHRUTHI K SHETTY</strong></td><td class='num gold'>82</td><td>♀ Female</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#91</span></td><td><strong>RASHI R</strong></td><td class='num gold'>81</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#93</span></td><td><strong>AYUSH SHETTY</strong></td><td class='num gold'>80</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#95</span></td><td><strong>EVAN RAYMOND LEWIS</strong></td><td class='num gold'>79</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#101</span></td><td><strong>SRUSHTI M</strong></td><td class='num gold'>73</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#103</span></td><td><strong>ESHAN SUVARNA</strong></td><td class='num gold'>69</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#104</span></td><td><strong>MANVITHA KULAL</strong></td><td class='num gold'>69</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#105</span></td><td><strong>VIBHA V SHETTY</strong></td><td class='num gold'>69</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#106</span></td><td><strong>VIKHYATH S</strong></td><td class='num gold'>67</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#107</span></td><td><strong>DAKSH J SHETTY</strong></td><td class='num gold'>67</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#108</span></td><td><strong>AHAN RAVIRAJA BHAT</strong></td><td class='num gold'>67</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#110</span></td><td><strong>SUSHANTH A G</strong></td><td class='num gold'>65</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#111</span></td><td><strong>PRATHEETH R SHETTY</strong></td><td class='num gold'>65</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#112</span></td><td><strong>PREETI SINGH</strong></td><td class='num gold'>63</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#113</span></td><td><strong>BHOWMIK SHETTY</strong></td><td class='num gold'>60</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#115</span></td><td><strong>SHAN SHEREGAR</strong></td><td class='num gold'>57</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#116</span></td><td><strong>SHALMALI R PRABHU</strong></td><td class='num gold'>57</td><td>♀ Female</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#117</span></td><td><strong>SHRIKRISHNA HEBBAR</strong></td><td class='num gold'>56</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#123</span></td><td><strong>VAISHNAVI NAYAK</strong></td><td class='num gold'>50</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#125</span></td><td><strong>JITIN RAJ SHETTY</strong></td><td class='num gold'>48</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#127</span></td><td><strong>NAMASYU RAVI KOTIAN</strong></td><td class='num gold'>47</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#130</span></td><td><strong>SALOMI DSOUZA</strong></td><td class='num gold'>40</td><td>♀ Female</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#131</span></td><td><strong>ADVIK N SHETTY</strong></td><td class='num gold'>39</td><td>♂ Male</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#132</span></td><td><strong>AADHYA LOKESH HEGDE</strong></td><td class='num gold'>39</td><td>♀ Female</td><td style='color:#d4c4a0'>🧭 THE NAVIGATOR</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Chartin' a steady course through middlin' waters.</td></tr><tr><td><span class='rank-badge'>#140</span></td><td><strong>SRAJAN NAVEEN</strong></td><td class='num gold'>25</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr><tr><td><span class='rank-badge'>#142</span></td><td><strong>PRATHVI PRABHU</strong></td><td class='num gold'>17</td><td>♂ Male</td><td style='color:#c87a6a'>💣 THE CANNONBALL</td><td style='color:var(--muted);font-size:.72rem;font-style:italic'>Overconfident — dangerous to themselves. Negative marking nightmare.</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ── ACCURACY TIERS ── -->
+  <div class="section" id="acc-tiers">
+    <div class="section-title">📐 Accuracy Tiers Per Subject</div>
+    <div class="section-sub">how many sailors be sharp, decent, or walkin' the plank</div>
+    <div class="tier-grid"><div class='tier-card'><h4>⚛️ Physics</h4><div class='tier-row'><span class='tier-label-elite'>Elite</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:15.9%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div><span style='color:#c8922a;text-align:right;font-family:"Share Tech Mono",monospace'>7</span></div><div class='tier-row'><span class='tier-label-decent'>Decent</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:45.5%;height:100%;background:#a0d8e8;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #a0d8e855"></div></div><span style='color:#a0d8e8;text-align:right;font-family:"Share Tech Mono",monospace'>20</span></div><div class='tier-row'><span class='tier-label-shaky'>Shaky</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:25.0%;height:100%;background:#d4c4a0;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #d4c4a055"></div></div><span style='color:#d4c4a0;text-align:right;font-family:"Share Tech Mono",monospace'>11</span></div><div class='tier-row'><span class='tier-label-sinkin'>Sinkin'</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:13.6%;height:100%;background:#8b2e0a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #8b2e0a55"></div></div><span style='color:#8b2e0a;text-align:right;font-family:"Share Tech Mono",monospace'>6</span></div></div><div class='tier-card'><h4>🧪 Chemistry</h4><div class='tier-row'><span class='tier-label-elite'>Elite</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:25.0%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div><span style='color:#c8922a;text-align:right;font-family:"Share Tech Mono",monospace'>11</span></div><div class='tier-row'><span class='tier-label-decent'>Decent</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:50.0%;height:100%;background:#a0d8e8;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #a0d8e855"></div></div><span style='color:#a0d8e8;text-align:right;font-family:"Share Tech Mono",monospace'>22</span></div><div class='tier-row'><span class='tier-label-shaky'>Shaky</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:22.7%;height:100%;background:#d4c4a0;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #d4c4a055"></div></div><span style='color:#d4c4a0;text-align:right;font-family:"Share Tech Mono",monospace'>10</span></div><div class='tier-row'><span class='tier-label-sinkin'>Sinkin'</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:2.3%;height:100%;background:#8b2e0a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #8b2e0a55"></div></div><span style='color:#8b2e0a;text-align:right;font-family:"Share Tech Mono",monospace'>1</span></div></div><div class='tier-card'><h4>📐 Maths</h4><div class='tier-row'><span class='tier-label-elite'>Elite</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:36.4%;height:100%;background:#c8922a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #c8922a55"></div></div><span style='color:#c8922a;text-align:right;font-family:"Share Tech Mono",monospace'>16</span></div><div class='tier-row'><span class='tier-label-decent'>Decent</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:25.0%;height:100%;background:#a0d8e8;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #a0d8e855"></div></div><span style='color:#a0d8e8;text-align:right;font-family:"Share Tech Mono",monospace'>11</span></div><div class='tier-row'><span class='tier-label-shaky'>Shaky</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:25.0%;height:100%;background:#d4c4a0;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #d4c4a055"></div></div><span style='color:#d4c4a0;text-align:right;font-family:"Share Tech Mono",monospace'>11</span></div><div class='tier-row'><span class='tier-label-sinkin'>Sinkin'</span><div style="background:#1e160a;border-radius:3px;height:10px;overflow:hidden;border:1px solid #3d2a0a"><div style="width:13.6%;height:100%;background:#8b2e0a;border-radius:3px;transition:width .6s ease;box-shadow:0 0 8px #8b2e0a55"></div></div><span style='color:#8b2e0a;text-align:right;font-family:"Share Tech Mono",monospace'>6</span></div></div></div>
+  </div>
+
+</div><!-- /container -->
+
+<div class="footer">
+  ☠ &nbsp; <span class="footer-domain">results.firewave.in</span> &nbsp; ⚓ &nbsp;
+  JUT Treasure Report &nbsp; ⚓ &nbsp; All results are final. No quarter given. &nbsp; ☠
+</div>
+
+</div><!-- /page -->
+
+<script>
+  // ── Sortable tables ──
+  document.querySelectorAll('table').forEach(table => {
+    table.querySelectorAll('th.sort').forEach(th => {
+      th.addEventListener('click', () => {
+        const colIdx = Array.from(th.parentNode.children).indexOf(th);
+        const tbody  = table.querySelector('tbody');
+        const rows   = Array.from(tbody.querySelectorAll('tr'));
+        const asc    = !th.classList.contains('asc');
+        table.querySelectorAll('th').forEach(h => h.classList.remove('asc','desc'));
+        th.classList.add(asc ? 'asc' : 'desc');
+        rows.sort((a, b) => {
+          const av = a.cells[colIdx]?.innerText.replace(/[^0-9.\-]/g,'') || '0';
+          const bv = b.cells[colIdx]?.innerText.replace(/[^0-9.\-]/g,'') || '0';
+          return asc ? parseFloat(av) - parseFloat(bv) : parseFloat(bv) - parseFloat(av);
+        });
+        rows.forEach(r => tbody.appendChild(r));
+      });
+    });
+  });
+
+  // ── Ember particles ──
+  const ec = document.getElementById('embers');
+  const colors = ['#f0b840','#e84c0e','#f0b840','#f0b840','#c8922a'];
+  for (let i = 0; i < 22; i++) {
+    const e = document.createElement('div');
+    e.className = 'ember';
+    e.style.setProperty('--x',     `${Math.random()*100}%`);
+    e.style.setProperty('--dur',   `${(4+Math.random()*5).toFixed(1)}s`);
+    e.style.setProperty('--delay', `${(Math.random()*8).toFixed(1)}s`);
+    e.style.setProperty('--sway',  `${(Math.random()*2-1).toFixed(2)}`);
+    e.style.background = colors[Math.floor(Math.random()*colors.length)];
+    if (Math.random() > .7) { e.style.width='3px'; e.style.height='3px'; }
+    ec.appendChild(e);
+  }
+</script>
+</body>
+</html>
