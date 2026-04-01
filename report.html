@@ -6,1090 +6,1690 @@
   <title>Sailor Report — FireWave</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Uncial+Antiqua&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Cinzel:wght@400;600;700&family=Lora:ital,wght@0,400;0,600;1,400;1,500&family=Share+Tech+Mono&display=swap" rel="stylesheet" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-  <link rel="icon" type="image/png" href="/pirate.png">
   <style>
+    /* ════════════════════════════════════════════
+       TOKENS
+    ════════════════════════════════════════════ */
     :root {
-      --ink:#0a0806;--parch:#1a1208;--smoke:#2a2218;--fog:#3d3225;
-      --gold:#c8922a;--gold-hi:#f0b840;--gold-dim:#7a5518;--ember:#e84c0e;
-      --teal:#5cb8b2;--green:#2ecc71;--red:#c0392b;--orange:#e67e22;
-      --magenta:#c05ca0;--amber:#e8a020;--pale:#d4c4a0;--muted:#7a6a50;--border:#3d3225;
+      /* base */
+      --bg:        #06060c;
+      --bg1:       #0b0b14;
+      --bg2:       #10101e;
+      --bg3:       #161628;
+      --surface:   #1a1a2e;
+      --surface2:  #1e1e34;
+      --border:    #252540;
+      --border2:   #32325a;
+
+      /* gold spectrum */
+      --g0:        #ffd97a;
+      --g1:        #f0c050;
+      --g2:        #d4a030;
+      --g3:        #8a5e10;
+      --g4:        #3a2806;
+
+      /* accents */
+      --teal:      #3dd6c8;
+      --teal-dim:  #1a6060;
+      --violet:    #8060d8;
+      --violet-dim:#30205a;
+      --crimson:   #e03050;
+      --crim-dim:  #4a0818;
+      --green:     #28d880;
+      --green-dim: #0a3820;
+      --amber:     #f0a020;
+      --amber-dim: #3a2a00;
+      --blue:      #4090f0;
+
+      /* text */
+      --t0:        #f0ece0;
+      --t1:        #b8b0a0;
+      --t2:        #706860;
+      --t3:        #3a3430;
+
+      /* fonts */
+      --fdisplay:  'Cinzel Decorative', serif;
+      --fheading:  'Cinzel', serif;
+      --fbody:     'Lora', Georgia, serif;
+      --fmono:     'Share Tech Mono', monospace;
+
+      /* layout */
+      --sidebar-w: 220px;
+      --topbar-h:  58px;
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-    html{scroll-behavior:smooth}
-    body{background:var(--ink);color:var(--pale);font-family:'Crimson Pro',Georgia,serif;min-height:100vh;overflow-x:hidden}
-    body::before{content:'';position:fixed;inset:0;pointer-events:none;z-index:999;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");opacity:.45}
-    body::after{content:'';position:fixed;inset:0;z-index:-1;background:radial-gradient(ellipse 110% 55% at 50% 100%,#0a1f2e 0%,transparent 65%),radial-gradient(ellipse 70% 35% at 85% 110%,#0d3348 0%,transparent 55%),linear-gradient(180deg,#0a0806 0%,#0d0b07 55%,#081520 100%)}
-    .rope-top{position:fixed;top:0;left:0;right:0;height:6px;z-index:200;background:repeating-linear-gradient(90deg,var(--gold-dim) 0px,var(--gold) 4px,var(--gold-dim) 8px,#5a3e10 12px,var(--gold-dim) 16px);box-shadow:0 2px 14px rgba(200,146,42,.35)}
-    .embers{position:fixed;inset:0;pointer-events:none;z-index:1}
-    .ember{position:absolute;width:2px;height:2px;border-radius:50%;background:var(--gold-hi);opacity:0;left:var(--x);bottom:-4px;animation:rise var(--dur) ease-in infinite var(--delay)}
-    @keyframes rise{0%{opacity:0;transform:translateY(0) scale(1)}10%{opacity:.8}80%{opacity:.2}100%{opacity:0;transform:translateY(-88vh) translateX(calc(var(--sw)*28px)) scale(.1)}}
-    #loading{position:fixed;inset:0;z-index:500;display:flex;flex-direction:column;align-items:center;justify-content:center;background:var(--ink);gap:18px}
-    .load-skull{font-size:3rem;animation:bob 1.5s ease-in-out infinite}
-    @keyframes bob{0%,100%{transform:translateY(0) rotate(-3deg)}50%{transform:translateY(-10px) rotate(3deg)}}
-    .load-text{font-family:'Uncial Antiqua',serif;color:var(--gold);font-size:1.1rem;letter-spacing:.1em;animation:flicker 2s infinite}
-    @keyframes flicker{0%,94%,100%{opacity:1}95%{opacity:.6}97%{opacity:1}98%{opacity:.8}}
-    .load-bar-wrap{width:220px;height:4px;background:var(--fog);border-radius:2px;overflow:hidden}
-    .load-bar{height:100%;width:0%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-hi));border-radius:2px;transition:width .4s ease;box-shadow:0 0 8px var(--gold)}
-    .page{max-width:1200px;margin:0 auto;padding:0 16px 90px;position:relative;z-index:2}
-    nav.top-nav{position:sticky;top:0;z-index:100;display:flex;flex-wrap:wrap;justify-content:center;gap:5px;padding:8px 12px;background:rgba(10,8,6,.92);backdrop-filter:blur(12px);border-bottom:1px solid var(--fog)}
-    nav.top-nav a{color:var(--muted);text-decoration:none;font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.08em;padding:4px 8px;border:1px solid var(--fog);border-radius:3px;transition:all .2s;white-space:nowrap}
-    nav.top-nav a:hover{color:var(--gold);border-color:var(--gold-dim);background:rgba(200,146,42,.08)}
-    .hero{padding:52px 16px 32px;text-align:center}
-    .hero-skull{font-size:2.4rem;display:block;margin-bottom:10px;filter:drop-shadow(0 0 20px rgba(240,184,64,.5));animation:bob 3s ease-in-out infinite}
-    .hero-name{font-family:'Uncial Antiqua',serif;font-size:clamp(1.5rem,5vw,3rem);color:var(--gold-hi);letter-spacing:.04em;text-shadow:0 0 30px rgba(240,184,64,.4),0 2px 0 #3a2000,0 4px 20px rgba(0,0,0,.8);animation:flicker 5s infinite}
-    .hero-meta{font-style:italic;color:var(--muted);font-size:clamp(.78rem,2vw,.95rem);margin-top:8px;letter-spacing:.04em}
-    .hero-divider{display:flex;align-items:center;gap:14px;max-width:400px;margin:18px auto}
-    .hero-divider::before,.hero-divider::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent)}
-    .hero-divider span{color:var(--gold);font-size:1rem}
-    .archetype-banner{display:inline-flex;align-items:center;gap:10px;padding:10px 20px;background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--gold-dim);border-radius:6px;margin-bottom:22px;box-shadow:0 0 20px rgba(200,146,42,.15);max-width:100%}
-    .arch-icon{font-size:1.4rem;flex-shrink:0}
-    .arch-name{font-family:'Uncial Antiqua',serif;color:var(--gold-hi);font-size:.95rem;letter-spacing:.06em}
-    .arch-desc{font-style:italic;color:var(--muted);font-size:.78rem;margin-top:2px}
-    .jut-selector-wrap{display:flex;flex-wrap:wrap;justify-content:center;gap:6px;margin:0 auto 28px;max-width:100%;padding:0 4px}
-    .jut-pill{font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.08em;padding:5px 12px;background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:20px;color:var(--muted);cursor:pointer;transition:all .2s;white-space:nowrap}
-    .jut-pill:hover{border-color:var(--gold-dim);color:var(--pale)}
-    .jut-pill.active{border-color:var(--gold);color:var(--gold-hi);box-shadow:0 0 12px rgba(200,146,42,.25);background:linear-gradient(145deg,#2a1e0a,#1a1206)}
-    .jut-pill.absent{border-style:dashed;opacity:.45;cursor:default}
-    .motiv-tag{font-family:'Crimson Pro',serif;font-style:italic;font-size:1rem;color:var(--gold);margin-bottom:22px;letter-spacing:.04em;min-height:1.5em;padding:0 8px}
-    .section{margin-top:48px;scroll-margin-top:70px}
-    .section-title{font-family:'Uncial Antiqua',serif;font-size:clamp(.95rem,2.5vw,1.4rem);color:var(--gold);letter-spacing:.05em;border-left:3px solid var(--gold-dim);padding-left:12px;margin-bottom:6px;text-shadow:0 0 18px rgba(200,146,42,.25)}
-    .section-sub{font-style:italic;color:var(--muted);font-size:.84rem;padding-left:15px;margin-bottom:16px;letter-spacing:.03em}
-    .section-divider{height:1px;margin:4px 0 18px;background:linear-gradient(90deg,var(--gold-dim),transparent)}
 
-    /* ── CARDS ── */
-    .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px}
-    @media(max-width:480px){.cards{grid-template-columns:repeat(2,1fr)}}
-    .card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:14px 12px;position:relative;overflow:hidden;transition:transform .2s,box-shadow .2s}
-    .card:hover{transform:translateY(-2px);box-shadow:0 6px 20px rgba(0,0,0,.5)}
-    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--gold-dim),transparent)}
-    .card.teal::before{background:linear-gradient(90deg,transparent,var(--teal),transparent)}
-    .card.green::before{background:linear-gradient(90deg,transparent,var(--green),transparent)}
-    .card.red::before{background:linear-gradient(90deg,transparent,var(--red),transparent)}
-    .card.amber::before{background:linear-gradient(90deg,transparent,var(--amber),transparent)}
-    .card.magenta::before{background:linear-gradient(90deg,transparent,var(--magenta),transparent)}
-    .card-label{font-family:'Share Tech Mono',monospace;color:var(--muted);font-size:.58rem;letter-spacing:.12em;text-transform:uppercase}
-    .card-value{font-family:'Uncial Antiqua',serif;font-size:1.6rem;color:var(--gold-hi);margin:4px 0 2px;line-height:1}
-    .card.teal .card-value{color:var(--teal)}.card.green .card-value{color:var(--green)}.card.red .card-value{color:var(--red)}.card.amber .card-value{color:var(--amber)}.card.magenta .card-value{color:var(--magenta)}
-    .card-note{font-style:italic;color:var(--muted);font-size:.7rem;line-height:1.3}
-    .card-delta{position:absolute;top:8px;right:10px;font-family:'Share Tech Mono',monospace;font-size:.62rem}
-    .delta-up{color:var(--green)}.delta-down{color:var(--red)}.delta-flat{color:var(--muted)}
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
 
-    /* ── SUBJECTS ── */
-    .subj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
-    @media(max-width:600px){.subj-grid{grid-template-columns:1fr}}
-    .subj-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:16px}
-    .subj-card h4{font-family:'Uncial Antiqua',serif;font-size:.88rem;color:var(--gold);letter-spacing:.06em;margin-bottom:12px}
-    .subj-row{display:flex;justify-content:space-between;align-items:center;margin:6px 0;font-size:.8rem}
-    .subj-row-label{color:var(--muted)}.subj-row-val{font-family:'Share Tech Mono',monospace;color:var(--pale);text-align:right;margin-left:8px}
-    .progress-wrap{margin:8px 0 4px}
-    .progress-label{display:flex;justify-content:space-between;font-size:.68rem;color:var(--muted);margin-bottom:4px;font-family:'Share Tech Mono',monospace}
-    .progress-bar{height:7px;background:var(--smoke);border-radius:4px;overflow:hidden;border:1px solid var(--fog)}
-    .progress-fill{height:100%;border-radius:3px;transition:width .8s ease;box-shadow:0 0 6px currentColor}
-    .fill-gold{background:var(--gold);color:var(--gold)}.fill-teal{background:var(--teal);color:var(--teal)}.fill-amber{background:var(--amber);color:var(--amber)}.fill-green{background:var(--green);color:var(--green)}.fill-red{background:var(--red);color:var(--red)}
-
-    /* ── CHARTS — mobile-first ── */
-    .chart-wrap{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:16px;position:relative}
-    .chart-wrap canvas{width:100%!important;height:auto!important;max-height:260px}
-    @media(max-width:600px){.chart-wrap canvas{max-height:200px}}
-
-    /* ── GRIDS ── */
-    .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
-    .three-col{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-top:12px}
-    @media(max-width:700px){.two-col{grid-template-columns:1fr}}
-    @media(max-width:900px){.three-col{grid-template-columns:1fr 1fr}}
-    @media(max-width:520px){.three-col{grid-template-columns:1fr}}
-
-    /* ── FLEET ── */
-    .fleet-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
-    @media(max-width:480px){.fleet-grid{grid-template-columns:1fr 1fr}}
-    .fleet-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:16px}
-    .fleet-card-title{font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-    .fleet-rank{font-family:'Uncial Antiqua',serif;font-size:2rem;color:var(--gold-hi);line-height:1}
-    .fleet-of{font-family:'Share Tech Mono',monospace;font-size:.68rem;color:var(--muted);margin-top:4px}
-    .fleet-bar{margin-top:8px}
-
-    /* ── TABLE ── */
-    .table-wrap{overflow-x:auto;border-radius:6px;border:1px solid var(--fog);-webkit-overflow-scrolling:touch}
-    table{width:100%;border-collapse:collapse;font-size:.72rem;font-family:'Share Tech Mono',monospace}
-    thead tr{background:#1a1208}
-    th{font-family:'Crimson Pro',serif;font-style:italic;font-size:.68rem;letter-spacing:.06em;color:var(--gold);padding:8px 10px;border-bottom:1px solid var(--fog);text-align:left;white-space:nowrap}
-    td{padding:7px 10px;border-bottom:1px solid rgba(61,50,37,.4);white-space:nowrap}
-    tr:last-child td{border-bottom:none}
-    tbody tr{background:linear-gradient(145deg,#1e160a,#130e06);transition:background .15s}
-    tbody tr:hover{background:#2a1e0e}
-    tbody tr:nth-child(even){background:rgba(26,18,8,.7)}
-    .num{text-align:right}
-    .gold{color:var(--gold-hi)!important}.teal{color:var(--teal)!important}.green{color:var(--green)!important}.red{color:var(--red)!important}.amber{color:var(--amber)!important}.magenta{color:var(--magenta)!important}.muted{color:var(--muted)!important}
-    .rank-badge{display:inline-block;background:linear-gradient(135deg,#1e160a,#130e06);border:1px solid var(--gold-dim);padding:2px 7px;border-radius:3px;color:var(--teal);font-size:.68rem}
-    .badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:.66rem;font-family:'Share Tech Mono',monospace}
-    .badge-red{background:rgba(192,57,43,.15);color:var(--red);border:1px solid var(--red)}
-    .badge-green{background:rgba(46,204,113,.12);color:var(--green);border:1px solid var(--green)}
-    .badge-teal{background:rgba(92,184,178,.12);color:var(--teal);border:1px solid var(--teal)}
-    .badge-yellow{background:rgba(240,184,64,.12);color:var(--gold-hi);border:1px solid var(--gold-dim)}
-    .badge-orange{background:rgba(230,126,34,.15);color:var(--orange);border:1px solid var(--orange)}
-
-    /* ── CAREER / BESTS ── */
-    .bests-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
-    @media(max-width:480px){.bests-grid{grid-template-columns:repeat(2,1fr)}}
-    .best-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:14px;display:flex;flex-direction:column;gap:3px}
-    .best-label{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase}
-    .best-val{font-family:'Uncial Antiqua',serif;font-size:1.35rem;color:var(--gold-hi)}
-    .best-jut{font-family:'Share Tech Mono',monospace;font-size:.64rem;color:var(--gold-dim)}
-
-    /* ── STREAK ── */
-    .streak-wrap{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-    @media(max-width:520px){.streak-wrap{grid-template-columns:repeat(2,1fr)}}
-    .streak-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:14px;text-align:center}
-    .streak-num{font-family:'Uncial Antiqua',serif;font-size:2rem}
-    .streak-label{font-family:'Share Tech Mono',monospace;font-size:.58rem;letter-spacing:.1em;color:var(--muted);margin-top:4px}
-
-    /* ── PROJECTIONS ── */
-    .proj-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px}
-    @media(max-width:480px){.proj-grid{grid-template-columns:1fr 1fr}}
-    .proj-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:16px;position:relative;overflow:hidden}
-    .proj-card::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--teal),transparent)}
-    .proj-scenario{font-family:'Share Tech Mono',monospace;font-size:.6rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-    .proj-score{font-family:'Uncial Antiqua',serif;font-size:1.8rem;color:var(--teal);line-height:1}
-    .proj-gain{font-family:'Share Tech Mono',monospace;font-size:.72rem;color:var(--green);margin-top:4px}
-    .proj-desc{font-style:italic;color:var(--muted);font-size:.72rem;margin-top:6px;line-height:1.4}
-
-    /* ── PERSONALITY ── */
-    .personality-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}
-    @media(max-width:520px){.personality-grid{grid-template-columns:1fr}}
-    .personality-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:14px;text-align:center}
-    .personality-subj{font-family:'Share Tech Mono',monospace;font-size:.64rem;letter-spacing:.12em;color:var(--muted);text-transform:uppercase;margin-bottom:8px}
-    .personality-label{font-size:.9rem;line-height:1.4}
-
-    /* ── TARGET ── */
-    .target-card{background:linear-gradient(145deg,#0e1a0e,#080e08);border:1px solid var(--green);border-radius:6px;padding:20px;text-align:center;margin-bottom:14px}
-    .target-card.miss{background:linear-gradient(145deg,#1a0e0a,#0e0806);border-color:var(--amber)}
-    .target-verdict{font-family:'Uncial Antiqua',serif;font-size:1.2rem;color:var(--green);margin-bottom:8px}
-    .target-card.miss .target-verdict{color:var(--amber)}
-    .target-sub{font-style:italic;color:var(--muted);font-size:.82rem}
-
-    /* ── BVJ ── */
-    .bvj-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-    @media(max-width:560px){.bvj-grid{grid-template-columns:1fr}}
-    .bvj-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:18px}
-    .bvj-title{font-family:'Uncial Antiqua',serif;font-size:.88rem;color:var(--gold);margin-bottom:10px}
-    .bvj-row{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 0;border-bottom:1px solid var(--fog)}
-    .bvj-row:last-child{border-bottom:none}
-
-    /* ── ADVICE ── */
-    .advice-box{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--gold-dim);border-radius:6px;padding:18px 20px;display:flex;flex-direction:column;gap:10px}
-    .advice-item{font-size:.95rem;line-height:1.6}
-    .advice-item span{color:var(--gold-hi);font-style:italic}
-
-    /* ── FLAGS ── */
-    .flags-strip{display:flex;flex-wrap:wrap;gap:7px}
-    .flag-chip{display:inline-flex;align-items:center;gap:4px;padding:4px 11px;border-radius:20px;font-size:.68rem;border:1px solid var(--fog);background:linear-gradient(145deg,#1e160a,#130e06);font-family:'Crimson Pro',serif;font-style:italic}
-    .flag-chip.on{border-color:var(--green);color:var(--green)}.flag-chip.warn{border-color:var(--amber);color:var(--amber)}.flag-chip.bad{border-color:var(--red);color:var(--red)}.flag-chip.off{opacity:.35}
-
-    /* ── RED FLAGS BOX ── */
-    .rf-box{background:linear-gradient(145deg,#1e0a0a,#100606);border:1px solid var(--red);border-radius:6px;padding:14px 18px;font-size:.84rem;line-height:1.7;color:var(--pale)}
-
-    /* ── MOMENTUM ── */
-    .momentum-card{display:flex;align-items:flex-start;gap:16px;background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:18px;margin-bottom:14px}
-    @media(max-width:480px){.momentum-card{flex-direction:column;align-items:center;text-align:center}}
-    .momentum-score{font-family:'Uncial Antiqua',serif;font-size:2.6rem;color:var(--gold-hi);min-width:70px;text-align:center;line-height:1;flex-shrink:0}
-    .momentum-info{flex:1}
-    .momentum-label{font-family:'Uncial Antiqua',serif;font-size:1rem;color:var(--gold);margin-bottom:4px}
-    .momentum-sub{font-style:italic;color:var(--muted);font-size:.8rem}
-
-    /* ── ANALYSIS (deep) ── */
-    .analysis-card{background:linear-gradient(145deg,#1e160a,#130e06);border:1px solid var(--fog);border-radius:6px;padding:18px}
-    .analysis-card h4{font-family:'Uncial Antiqua',serif;font-size:.88rem;color:var(--gold);letter-spacing:.06em;margin-bottom:12px}
-    .analysis-row{display:flex;justify-content:space-between;font-size:.8rem;padding:5px 0;border-bottom:1px solid rgba(61,50,37,.3)}
-    .analysis-row:last-child{border-bottom:none}
-    .analysis-label{color:var(--muted);flex-shrink:0;margin-right:8px}
-    .analysis-val{font-family:'Share Tech Mono',monospace;color:var(--pale);text-align:right}
-    .corr-pos{color:var(--green)!important}.corr-neg{color:var(--red)!important}.corr-none{color:var(--muted)!important}
-    .recovery-banner{background:linear-gradient(145deg,#0a180a,#080e08);border:1px solid var(--green);border-radius:6px;padding:14px 18px;margin-bottom:14px;font-size:.88rem;line-height:1.7}
-    .recovery-banner.bad{background:linear-gradient(145deg,#1a0a0a,#0e0606);border-color:var(--red)}
-
-    /* ── FOOTER ── */
-    footer{text-align:center;padding:32px 16px;color:var(--muted);font-style:italic;font-size:.82rem;border-top:1px solid var(--fog);margin-top:56px;font-family:'Crimson Pro',serif;letter-spacing:.05em}
-    .footer-skull{font-size:1.1rem;opacity:.35;margin-bottom:6px}
-
-    /* ── SCROLLBAR ── */
-    ::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--ink)}::-webkit-scrollbar-thumb{background:var(--fog);border-radius:3px}::-webkit-scrollbar-thumb:hover{background:var(--gold-dim)}
-    /* ── MOBILE JUT PILLS ── */
-    .mjp{font-family:'Share Tech Mono',monospace;font-size:.68rem;letter-spacing:.08em;padding:6px 12px;border-radius:4px;border:1px solid var(--fog);background:transparent;color:var(--muted);cursor:pointer;transition:all .18s;white-space:nowrap;flex-shrink:0;min-height:34px;display:inline-flex;align-items:center;-webkit-tap-highlight-color:transparent}
-    .mjp:hover,.mjp:focus{border-color:var(--gold-dim);color:var(--pale);outline:none}
-    .mjp.active{border-color:var(--gold);color:var(--gold-hi);background:rgba(200,146,42,.12);box-shadow:0 0 10px rgba(200,146,42,.2)}
-    .mjp.absent{opacity:.3;cursor:default;border-style:dashed}
-    .hidden{display:none!important}
-  
-    /* ════ MOBILE JUT BAR ════ */
-    #mobile-jut-bar {
-      display: none;
-      position: sticky;
-      top: var(--topbar-h);
-      z-index: 350;
-      background: rgba(6,6,12,0.96);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 14px;
-      overflow-x: auto;
-      overflow-y: hidden;
-      white-space: nowrap;
-      scrollbar-width: none;
-      -webkit-overflow-scrolling: touch;
+    body {
+      background: var(--bg);
+      color: var(--t0);
+      font-family: var(--fbody);
+      min-height: 100vh;
+      overflow-x: hidden;
     }
-    #mobile-jut-bar::-webkit-scrollbar { display: none; }
-    .mjb-label {
-      display: inline-block;
+
+    /* scrollbar */
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-track { background: var(--bg); }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
+
+    /* ════ BACKGROUND ATMOSPHERE ════ */
+    .atmo {
+      position: fixed; inset: 0; z-index: 0; pointer-events: none;
+      background:
+        radial-gradient(ellipse 80% 60% at 10% 0%, rgba(128,96,216,0.09) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 40% at 90% 20%, rgba(212,160,48,0.06) 0%, transparent 50%),
+        radial-gradient(ellipse 100% 50% at 50% 110%, rgba(61,214,200,0.05) 0%, transparent 55%);
+    }
+    .noise {
+      position: fixed; inset: 0; z-index: 1; pointer-events: none; opacity: 0.025;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 512 512' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+      background-size: 256px;
+    }
+
+    /* ════ EMBERS ════ */
+    .embers { position: fixed; inset: 0; pointer-events: none; z-index: 2; }
+    .ember {
+      position: absolute; border-radius: 50%;
+      width: var(--sz, 2px); height: var(--sz, 2px);
+      background: var(--col, var(--g0));
+      opacity: 0; left: var(--x); bottom: -6px;
+      animation: rise var(--dur) ease-in infinite var(--delay);
+      box-shadow: 0 0 4px var(--col, var(--g0));
+    }
+    @keyframes rise {
+      0%   { opacity: 0; transform: translateY(0) translateX(0) scale(1); }
+      10%  { opacity: 0.9; }
+      85%  { opacity: 0.15; }
+      100% { opacity: 0; transform: translateY(-95vh) translateX(calc(var(--sw)*40px)) scale(0.1); }
+    }
+
+    /* ════ LOADING SCREEN ════ */
+    #loading {
+      position: fixed; inset: 0; z-index: 900;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      background: var(--bg);
+      gap: 0;
+      transition: opacity 0.6s ease, transform 0.6s ease;
+    }
+    #loading.fade-out { opacity: 0; transform: scale(1.04); pointer-events: none; }
+
+    .load-crest {
+      position: relative; width: 130px; height: 130px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 32px;
+    }
+    .load-ring {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 1px solid rgba(212,160,48,0.2);
+      animation: spin-slow 12s linear infinite;
+    }
+    .load-ring-2 {
+      inset: 12px;
+      border: 1px dashed rgba(212,160,48,0.12);
+      animation-direction: reverse;
+      animation-duration: 8s;
+    }
+    @keyframes spin-slow { to { transform: rotate(360deg); } }
+    .load-glow {
+      position: absolute; inset: 20px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(212,160,48,0.12) 0%, transparent 70%);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    @keyframes pulse-glow {
+      0%,100% { opacity: 0.6; transform: scale(0.95); }
+      50%      { opacity: 1; transform: scale(1.05); }
+    }
+    .load-skull { font-size: 3rem; position: relative; z-index: 1; animation: bob 2s ease-in-out infinite; filter: drop-shadow(0 0 20px rgba(212,160,48,0.7)); }
+    @keyframes bob { 0%,100%{transform:translateY(0) rotate(-4deg)} 50%{transform:translateY(-10px) rotate(4deg)} }
+
+    .load-title {
+      font-family: var(--fdisplay);
+      font-size: 1.5rem;
+      color: var(--g1);
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      text-align: center;
+    }
+    .load-sub {
       font-family: var(--fmono);
-      font-size: 0.56rem;
+      font-size: 0.72rem;
+      color: var(--t2);
       letter-spacing: 0.2em;
       text-transform: uppercase;
-      color: var(--t3);
-      margin-right: 10px;
-      vertical-align: middle;
+      margin-bottom: 36px;
     }
-    .mjb-pills {
-      display: inline-flex;
-      gap: 5px;
+    .load-progress {
+      width: 260px; height: 2px;
+      background: var(--border);
+      border-radius: 2px; overflow: hidden;
+      position: relative;
     }
-    .mjp {
+    .load-bar {
+      height: 100%; width: 0%;
+      background: linear-gradient(90deg, var(--g3), var(--g0));
+      border-radius: 2px;
+      transition: width 0.5s ease;
+      box-shadow: 0 0 12px var(--g1);
+    }
+    .load-pct {
       font-family: var(--fmono);
-      font-size: 0.62rem;
-      letter-spacing: 0.08em;
-      padding: 5px 12px;
-      border-radius: 4px;
+      font-size: 0.65rem;
+      color: var(--t2);
+      margin-top: 10px;
+      letter-spacing: 0.1em;
+    }
+
+    /* ════ TOPBAR ════ */
+    #topbar {
+      position: fixed; top: 0; left: 0; right: 0;
+      height: var(--topbar-h); z-index: 400;
+    
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    
+      padding: 0 24px;
+      background: rgba(6,6,12,0.9);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border);
+    
+      overflow-x: auto;           /* ✅ enables horizontal scroll */
+      overflow-y: hidden;
+      white-space: nowrap;        /* ✅ prevents wrapping */
+      scroll-behavior: smooth;
+    }
+    
+    /* hide scrollbar (optional, cleaner UI) */
+    #topbar::-webkit-scrollbar {
+      display: none;
+    }
+    .topbar-logo {
+      font-family: var(--fdisplay);
+      font-size: 1rem;
+      color: var(--g1);
+      letter-spacing: 0.04em;
+      white-space: nowrap;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .topbar-logo a { color: inherit; text-decoration: none; }
+    .topbar-divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
+    .topbar-name {
+      font-family: var(--fheading);
+      font-size: 0.88rem;
+      color: var(--t1);
+      letter-spacing: 0.06em;
+      flex: 1;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .topbar-meta {
+      font-family: var(--fmono);
+      font-size: 0.65rem;
+      color: var(--t2);
+      letter-spacing: 0.1em;
+      white-space: nowrap;
+    }
+    .topbar-jut-select {
+      display: flex; align-items: center; gap: 6px; margin-left: auto;
+      flex-shrink: 0;
+    }
+    .topbar-jut-label {
+      font-family: var(--fmono);
+      font-size: 0.6rem;
+      color: var(--t2);
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    .jut-pills-mini {
+      display: flex; gap: 4px; flex-wrap: nowrap; overflow-x: auto;
+      max-width: 420px; scrollbar-width: none;
+    }
+    .jut-pills-mini::-webkit-scrollbar { display: none; }
+    .jp {
+      font-family: var(--fmono);
+      font-size: 0.6rem;
+      letter-spacing: 0.1em;
+      padding: 4px 10px;
+      border-radius: 3px;
       border: 1px solid var(--border);
       background: transparent;
       color: var(--t2);
       cursor: pointer;
       transition: all 0.18s;
-      white-space: nowrap;
-      flex-shrink: 0;
-      -webkit-tap-highlight-color: transparent;
-      min-height: 32px; /* fat touch target */
-      display: inline-flex;
-      align-items: center;
+      white-space: nowrap; flex-shrink: 0;
     }
-    .mjp:hover, .mjp:focus { border-color: var(--g3); color: var(--t1); outline: none; }
-    .mjp.active {
-      border-color: var(--g2);
-      background: rgba(212,160,48,0.12);
-      color: var(--g0);
-      box-shadow: 0 0 8px rgba(212,160,48,0.2);
-    }
-    .mjp.absent { opacity: 0.3; cursor: default; border-style: dashed; }
+    .jp:hover { border-color: var(--g3); color: var(--t1); }
+    .jp.active { border-color: var(--g2); background: rgba(212,160,48,0.1); color: var(--g0); }
+    .jp.absent { opacity: 0.3; cursor: default; border-style: dashed; }
 
+    /* ════ LAYOUT ════ */
+    #shell {
+      display: flex;
+      padding-top: var(--topbar-h);
+      min-height: 100vh;
+    }
+
+    /* ════ SIDEBAR ════ */
+    #sidebar {
+      position: fixed;
+      top: var(--topbar-h); bottom: 0; left: 0;
+      width: var(--sidebar-w);
+      background: rgba(10,10,20,0.96);
+      border-right: 1px solid var(--border);
+      backdrop-filter: blur(16px);
+      overflow-y: auto; overflow-x: hidden;
+      z-index: 300;
+      padding: 24px 0 40px;
+      scrollbar-width: none;
+    }
+    #sidebar::-webkit-scrollbar { display: none; }
+
+    .nav-group { margin-bottom: 6px; }
+    .nav-group-label {
+      font-family: var(--fmono);
+      font-size: 0.56rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--t3);
+      padding: 12px 20px 6px;
+    }
+    .nav-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 9px 20px;
+      color: var(--t2);
+      text-decoration: none;
+      font-family: var(--fmono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      transition: all 0.18s;
+      position: relative;
+      border-left: 2px solid transparent;
+    }
+    .nav-item:hover { color: var(--t1); background: rgba(255,255,255,0.03); border-left-color: var(--border2); }
+    .nav-item.active { color: var(--g1); background: rgba(212,160,48,0.07); border-left-color: var(--g2); }
+    .nav-item .ni { font-size: 0.85rem; width: 18px; text-align: center; flex-shrink: 0; }
+    .nav-home { margin: 0 12px 16px; padding: 10px 16px; background: var(--surface); border: 1px solid var(--border); border-radius: 6px; color: var(--t2); text-decoration: none; font-family: var(--fmono); font-size: 0.65rem; letter-spacing: 0.1em; display: flex; align-items: center; gap: 8px; transition: all 0.2s; }
+    .nav-home:hover { border-color: var(--g3); color: var(--g1); }
+
+    /* archetype mini in sidebar */
+    .arch-mini {
+      margin: 0 12px 16px;
+      padding: 14px 16px;
+      background: linear-gradient(135deg, var(--surface), var(--bg2));
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      text-align: center;
+    }
+    .arch-mini-icon { font-size: 1.8rem; display: block; margin-bottom: 6px; filter: drop-shadow(0 0 10px rgba(212,160,48,0.5)); }
+    .arch-mini-name { font-family: var(--fheading); font-size: 0.72rem; color: var(--g1); letter-spacing: 0.08em; line-height: 1.3; }
+    .arch-mini-desc { font-family: var(--fbody); font-style: italic; font-size: 0.65rem; color: var(--t2); margin-top: 4px; line-height: 1.4; }
+
+    /* ════ MAIN CONTENT ════ */
+    #main {
+      flex: 1;
+      margin-left: var(--sidebar-w);
+      min-width: 0;
+      padding: 0;
+    }
+
+    /* ════ HERO ════ */
+    .hero {
+      position: relative; overflow: hidden;
+      padding: 52px 52px 48px;
+      background: linear-gradient(135deg, var(--bg1) 0%, var(--bg2) 60%, var(--bg1) 100%);
+      border-bottom: 1px solid var(--border);
+    }
+    .hero::before {
+      content: '';
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 80% 100% at 0% 50%, rgba(128,96,216,0.07) 0%, transparent 60%),
+        radial-gradient(ellipse 60% 80% at 100% 0%, rgba(212,160,48,0.06) 0%, transparent 50%);
+    }
+    .hero-inner { position: relative; z-index: 1; }
+    .hero-row { display: flex; align-items: flex-start; gap: 32px; flex-wrap: wrap; }
+
+    .hero-crest {
+      width: 90px; height: 90px; flex-shrink: 0;
+      border-radius: 50%;
+      border: 1px solid rgba(212,160,48,0.25);
+      display: flex; align-items: center; justify-content: center;
+      background: radial-gradient(circle, rgba(212,160,48,0.1) 0%, transparent 70%);
+      box-shadow: 0 0 40px rgba(212,160,48,0.12), inset 0 0 20px rgba(0,0,0,0.5);
+      position: relative;
+      animation: crest-pulse 5s ease-in-out infinite;
+    }
+    @keyframes crest-pulse {
+      0%,100% { box-shadow: 0 0 40px rgba(212,160,48,0.12); }
+      50%      { box-shadow: 0 0 60px rgba(212,160,48,0.22); }
+    }
+    .hero-crest::before {
+      content: ''; position: absolute; inset: -8px;
+      border-radius: 50%; border: 1px dashed rgba(212,160,48,0.1);
+    }
+    .hero-skull { font-size: 2.6rem; animation: bob 4s ease-in-out infinite; }
+
+    .hero-info { flex: 1; min-width: 0; }
+    .hero-grade-chip {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--fmono);
+      font-size: 0.6rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--g2);
+      border: 1px solid var(--g3);
+      padding: 3px 10px;
+      border-radius: 20px;
+      background: rgba(212,160,48,0.07);
+      margin-bottom: 12px;
+    }
+    .hero-name {
+      font-family: var(--fdisplay);
+      font-size: clamp(1.6rem, 4vw, 2.8rem);
+      font-weight: 900;
+      background: linear-gradient(135deg, var(--g0) 0%, var(--g1) 50%, #a07020 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.02em;
+      line-height: 1.1;
+      margin-bottom: 10px;
+    }
+    .hero-meta {
+      font-family: var(--fmono);
+      font-size: 0.68rem;
+      color: var(--t2);
+      letter-spacing: 0.1em;
+      line-height: 1.8;
+    }
+    .hero-meta-pill {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      margin: 2px 3px;
+      font-size: 0.65rem;
+    }
+    .hero-motiv {
+      font-family: var(--fbody);
+      font-style: italic;
+      font-size: 1.05rem;
+      color: var(--g2);
+      margin-top: 14px;
+      padding-left: 14px;
+      border-left: 2px solid var(--g3);
+      line-height: 1.5;
+    }
+
+    /* stat strip */
+    .hero-stats {
+      display: flex; gap: 0; margin-top: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+    .hs {
+      flex: 1; padding: 16px 20px;
+      border-right: 1px solid var(--border);
+      position: relative;
+    }
+    .hs:last-child { border-right: none; }
+    .hs::after {
+      content: '';
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .hs-score::after { background: linear-gradient(90deg, transparent, var(--g1), transparent); }
+    .hs-rank::after  { background: linear-gradient(90deg, transparent, var(--teal), transparent); }
+    .hs-pct::after   { background: linear-gradient(90deg, transparent, var(--violet), transparent); }
+    .hs-acc::after   { background: linear-gradient(90deg, transparent, var(--amber), transparent); }
+    .hs-label {
+      font-family: var(--fmono); font-size: 0.58rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--t2); margin-bottom: 5px;
+    }
+    .hs-value {
+      font-family: var(--fheading); font-size: 1.7rem; font-weight: 700;
+      line-height: 1; letter-spacing: -0.01em;
+    }
+    .hs-score .hs-value { color: var(--g0); }
+    .hs-rank  .hs-value { color: var(--teal); }
+    .hs-pct   .hs-value { color: var(--violet); }
+    .hs-acc   .hs-value { color: var(--amber); }
+    .hs-note {
+      font-family: var(--fmono); font-size: 0.6rem;
+      color: var(--t2); margin-top: 4px; letter-spacing: 0.06em;
+    }
+    .hs-delta {
+      font-family: var(--fmono); font-size: 0.62rem;
+      margin-top: 3px;
+    }
+    .up { color: var(--green); } .dn { color: var(--crimson); }
+
+    /* archetype pill in hero */
+    .arch-hero {
+      display: inline-flex; align-items: center; gap: 12px;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, rgba(128,96,216,0.1), rgba(212,160,48,0.06));
+      border: 1px solid var(--border2);
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+    .arch-hero-icon { font-size: 1.6rem; filter: drop-shadow(0 0 10px rgba(212,160,48,0.5)); }
+    .arch-hero-name { font-family: var(--fheading); font-size: 0.95rem; font-weight: 700; color: var(--g1); letter-spacing: 0.06em; }
+    .arch-hero-desc { font-family: var(--fbody); font-style: italic; font-size: 0.78rem; color: var(--t2); margin-top: 2px; }
+
+    /* ════ SECTION ════ */
+    .section {
+      padding: 48px 52px;
+      border-bottom: 1px solid var(--border);
+      scroll-margin-top: var(--topbar-h);
+    }
+    .section:last-child { border-bottom: none; }
+    .section-header { margin-bottom: 28px; }
+    .sh-row { display: flex; align-items: center; gap: 14px; }
+    .sh-icon {
+      width: 36px; height: 36px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1.1rem; flex-shrink: 0;
+    }
+    .shi-gold   { background: rgba(212,160,48,0.12); border: 1px solid rgba(212,160,48,0.2); }
+    .shi-teal   { background: rgba(61,214,200,0.1); border: 1px solid rgba(61,214,200,0.2); }
+    .shi-violet { background: rgba(128,96,216,0.1); border: 1px solid rgba(128,96,216,0.2); }
+    .shi-crim   { background: rgba(224,48,80,0.1); border: 1px solid rgba(224,48,80,0.2); }
+    .shi-green  { background: rgba(40,216,128,0.1); border: 1px solid rgba(40,216,128,0.2); }
+    .shi-amber  { background: rgba(240,160,32,0.1); border: 1px solid rgba(240,160,32,0.2); }
+    .section-title {
+      font-family: var(--fheading);
+      font-size: clamp(1rem, 2.4vw, 1.3rem);
+      font-weight: 700;
+      color: var(--t0);
+      letter-spacing: 0.04em;
+    }
+    .section-sub {
+      font-family: var(--fmono); font-size: 0.65rem;
+      color: var(--t2); letter-spacing: 0.1em; margin-top: 3px;
+    }
+    .section-rule {
+      margin: 14px 0 24px;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border2), var(--border), transparent);
+    }
+
+    /* ════ CARD GRID ════ */
+    .cg { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 10px; }
+    .cg-wide { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+    .cg-narrow { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+
+    .kc {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 18px 16px;
+      position: relative; overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+    .kc:hover { border-color: var(--border2); transform: translateY(-2px); }
+    .kc-accent {
+      position: absolute; top: 0; left: 0; right: 0; height: 2px;
+    }
+    .kc-label {
+      font-family: var(--fmono); font-size: 0.58rem;
+      letter-spacing: 0.18em; text-transform: uppercase;
+      color: var(--t2); margin-bottom: 7px;
+    }
+    .kc-value {
+      font-family: var(--fheading); font-size: 1.75rem;
+      font-weight: 700; line-height: 1;
+      color: var(--g0); letter-spacing: -0.01em;
+    }
+    .kc-note {
+      font-family: var(--fbody); font-style: italic;
+      font-size: 0.72rem; color: var(--t2); margin-top: 5px;
+      line-height: 1.4;
+    }
+    .kc-delta {
+      position: absolute; top: 12px; right: 12px;
+      font-family: var(--fmono); font-size: 0.6rem;
+    }
+    /* color variants */
+    .kc-teal   .kc-value { color: var(--teal); }
+    .kc-green  .kc-value { color: var(--green); }
+    .kc-red    .kc-value { color: var(--crimson); }
+    .kc-amber  .kc-value { color: var(--amber); }
+    .kc-violet .kc-value { color: var(--violet); }
+    .kc-teal   .kc-accent { background: linear-gradient(90deg, transparent, var(--teal-dim), transparent); }
+    .kc-green  .kc-accent { background: linear-gradient(90deg, transparent, var(--green-dim), transparent); }
+    .kc-red    .kc-accent { background: linear-gradient(90deg, transparent, var(--crim-dim), transparent); }
+    .kc-amber  .kc-accent { background: linear-gradient(90deg, transparent, var(--amber-dim), transparent); }
+    .kc-violet .kc-accent { background: linear-gradient(90deg, transparent, var(--violet-dim), transparent); }
+    .kc        .kc-accent { background: linear-gradient(90deg, transparent, var(--g3), transparent); }
+
+    /* ════ PROGRESS BAR ════ */
+    .pb-wrap { margin: 8px 0; }
+    .pb-head { display: flex; justify-content: space-between; margin-bottom: 4px; }
+    .pb-label { font-family: var(--fmono); font-size: 0.6rem; color: var(--t2); letter-spacing: 0.08em; }
+    .pb-val   { font-family: var(--fmono); font-size: 0.6rem; color: var(--t1); }
+    .pb-track { height: 5px; background: var(--bg3); border-radius: 3px; overflow: hidden; }
+    .pb-fill  { height: 100%; border-radius: 3px; transition: width 1s cubic-bezier(0.4,0,0.2,1); }
+
+    /* ════ SUBJECT CARDS ════ */
+    .subj-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 900px) { .subj-grid { grid-template-columns: 1fr; } }
+
+    .subj-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .subj-head {
+      padding: 16px 20px 14px;
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .subj-title { font-family: var(--fheading); font-size: 0.88rem; font-weight: 700; letter-spacing: 0.06em; }
+    .subj-trend { font-family: var(--fmono); font-size: 0.68rem; color: var(--t2); }
+    .subj-score-row {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .subj-score-cell { padding: 14px 20px; border-right: 1px solid var(--border); }
+    .subj-score-cell:last-child { border-right: none; }
+    .subj-score-cell .kc-label { margin-bottom: 4px; }
+    .subj-big { font-family: var(--fheading); font-size: 1.5rem; font-weight: 700; line-height: 1; }
+    .subj-body { padding: 14px 20px; }
+    .subj-row { display: flex; justify-content: space-between; align-items: center; padding: 5px 0; border-bottom: 1px solid rgba(37,37,64,0.5); }
+    .subj-row:last-child { border-bottom: none; }
+    .subj-row-k { font-family: var(--fmono); font-size: 0.62rem; color: var(--t2); letter-spacing: 0.08em; }
+    .subj-row-v { font-family: var(--fmono); font-size: 0.7rem; color: var(--t1); }
+
+    /* ════ CHARTS ════ */
+    .chart-panel {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 24px;
+      position: relative; overflow: hidden;
+    }
+    .chart-panel::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--g3), transparent);
+    }
+    .chart-panel canvas { max-height: 280px; }
+    .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+    @media (max-width: 700px) { .charts-2col { grid-template-columns: 1fr; } }
+    .chart-title {
+      font-family: var(--fheading); font-size: 0.78rem; font-weight: 700;
+      color: var(--t1); letter-spacing: 0.08em;
+      margin-bottom: 16px; padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    /* ════ FLEET ════ */
+    .fleet-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; }
+    .fleet-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 18px;
+    }
+    .fleet-label { font-family: var(--fmono); font-size: 0.58rem; letter-spacing: 0.16em; text-transform: uppercase; color: var(--t2); margin-bottom: 8px; }
+    .fleet-rank { font-family: var(--fheading); font-size: 2.2rem; font-weight: 700; line-height: 1; }
+    .fleet-of   { font-family: var(--fmono); font-size: 0.65rem; color: var(--t2); margin-top: 3px; }
+    .fleet-bar  { margin-top: 12px; }
+
+    /* ════ PROJECTION CARDS ════ */
+    .proj-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
+    .proj-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: 8px;
+      padding: 20px; position: relative; overflow: hidden;
+    }
+    .proj-card::before {
+      content: ''; position: absolute; top: 0; left: 0; right: 0; height: 2px;
+      background: linear-gradient(90deg, transparent, var(--teal-dim), transparent);
+    }
+    .proj-scenario { font-family: var(--fmono); font-size: 0.6rem; letter-spacing: 0.12em; text-transform: uppercase; color: var(--t2); margin-bottom: 10px; }
+    .proj-score { font-family: var(--fheading); font-size: 2rem; font-weight: 700; color: var(--teal); line-height: 1; }
+    .proj-gain { font-family: var(--fmono); font-size: 0.72rem; color: var(--green); margin-top: 5px; }
+    .proj-desc { font-family: var(--fbody); font-style: italic; font-size: 0.75rem; color: var(--t2); margin-top: 8px; line-height: 1.45; }
+
+    /* ════ MOMENTUM ════ */
+    .momentum-panel {
+      background: linear-gradient(135deg, var(--surface), var(--bg2));
+      border: 1px solid var(--border); border-radius: 10px;
+      padding: 24px; display: flex; gap: 24px; align-items: center;
+      margin-bottom: 16px; flex-wrap: wrap;
+    }
+    .mom-score { font-family: var(--fheading); font-size: 3rem; font-weight: 700; color: var(--g0); min-width: 90px; text-align: center; line-height: 1; }
+    .mom-divider { width: 1px; height: 60px; background: var(--border); flex-shrink: 0; }
+    .mom-info { flex: 1; min-width: 0; }
+    .mom-label { font-family: var(--fheading); font-size: 1.1rem; color: var(--g1); letter-spacing: 0.04em; margin-bottom: 6px; }
+    .mom-sub { font-family: var(--fmono); font-size: 0.68rem; color: var(--t2); letter-spacing: 0.06em; line-height: 1.8; }
+
+    .streak-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 20px; }
+    .streak-card { flex: 1; min-width: 130px; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: center; }
+    .streak-num { font-family: var(--fheading); font-size: 2.2rem; font-weight: 700; line-height: 1; }
+    .streak-label { font-family: var(--fmono); font-size: 0.6rem; letter-spacing: 0.12em; color: var(--t2); margin-top: 5px; }
+
+    .personality-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    @media (max-width: 700px) { .personality-grid { grid-template-columns: 1fr; } }
+    .pers-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 18px; text-align: center; }
+    .pers-subj { font-family: var(--fmono); font-size: 0.62rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t2); margin-bottom: 8px; }
+    .pers-label { font-family: var(--fbody); font-size: 0.9rem; color: var(--t1); line-height: 1.4; }
+    .pers-code { font-family: var(--fmono); font-size: 0.6rem; color: var(--t3); margin-top: 5px; }
+
+    /* ════ TABLE ════ */
+    .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.75rem; font-family: var(--fmono); }
+    thead { background: var(--bg2); }
+    th { font-family: var(--fbody); font-style: italic; font-size: 0.7rem; letter-spacing: 0.05em; color: var(--g2); padding: 11px 14px; border-bottom: 1px solid var(--border); text-align: left; white-space: nowrap; }
+    td { padding: 9px 14px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    tbody tr:last-child td { border-bottom: none; }
+    tbody tr { background: var(--surface); transition: background 0.15s; }
+    tbody tr:hover { background: var(--surface2); }
+    tbody tr:nth-child(even) { background: var(--bg2); }
+    tbody tr:nth-child(even):hover { background: var(--surface2); }
+    .num { text-align: right; }
+    .tc-gold   { color: var(--g0); }
+    .tc-teal   { color: var(--teal); }
+    .tc-green  { color: var(--green); }
+    .tc-red    { color: var(--crimson); }
+    .tc-amber  { color: var(--amber); }
+    .tc-violet { color: var(--violet); }
+    .tc-muted  { color: var(--t2); }
+
+    /* badge */
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 3px; font-size: 0.65rem; font-family: var(--fmono); letter-spacing: 0.06em; }
+    .b-red    { background: rgba(224,48,80,0.12); color: var(--crimson); border: 1px solid rgba(224,48,80,0.3); }
+    .b-green  { background: rgba(40,216,128,0.1); color: var(--green);   border: 1px solid rgba(40,216,128,0.25); }
+    .b-gold   { background: rgba(212,160,48,0.1); color: var(--g0);      border: 1px solid var(--g3); }
+    .b-teal   { background: rgba(61,214,200,0.1); color: var(--teal);    border: 1px solid var(--teal-dim); }
+    .b-amber  { background: rgba(240,160,32,0.1); color: var(--amber);   border: 1px solid var(--amber-dim); }
+    .b-violet { background: rgba(128,96,216,0.1); color: var(--violet);  border: 1px solid var(--violet-dim); }
+    .rank-badge { display: inline-block; background: var(--bg2); border: 1px solid var(--border2); padding: 2px 8px; border-radius: 3px; color: var(--teal); font-size: 0.68rem; font-family: var(--fmono); }
+
+    /* ════ CAREER BESTS ════ */
+    .bests-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 12px; }
+    .best-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 16px; }
+    .best-label { font-family: var(--fmono); font-size: 0.6rem; letter-spacing: 0.14em; text-transform: uppercase; color: var(--t2); margin-bottom: 6px; }
+    .best-val { font-family: var(--fheading); font-size: 1.5rem; font-weight: 700; color: var(--g0); line-height: 1; }
+    .best-jut { font-family: var(--fmono); font-size: 0.62rem; color: var(--t2); margin-top: 4px; }
+
+    /* ════ TARGET ════ */
+    .target-verdict-card {
+      padding: 24px 28px;
+      background: linear-gradient(135deg, rgba(40,216,128,0.07), rgba(6,6,12,0.95));
+      border: 1px solid rgba(40,216,128,0.25);
+      border-radius: 10px;
+      margin-bottom: 16px; text-align: center;
+    }
+    .target-verdict-card.miss {
+      background: linear-gradient(135deg, rgba(240,160,32,0.07), rgba(6,6,12,0.95));
+      border-color: rgba(240,160,32,0.25);
+    }
+    .target-v { font-family: var(--fheading); font-size: 1.3rem; font-weight: 700; color: var(--green); letter-spacing: 0.06em; }
+    .target-verdict-card.miss .target-v { color: var(--amber); }
+    .target-sub { font-family: var(--fbody); font-style: italic; font-size: 0.85rem; color: var(--t2); margin-top: 8px; }
+
+    /* ════ ORACLE / ADVICE ════ */
+    .oracle-box {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+    }
+    .oracle-row {
+      display: flex; gap: 0;
+      border-bottom: 1px solid var(--border);
+      align-items: stretch;
+    }
+    .oracle-row:last-child { border-bottom: none; }
+    .oracle-icon {
+      width: 48px; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 1rem; background: var(--bg2);
+      border-right: 1px solid var(--border);
+      color: var(--g2);
+    }
+    .oracle-key {
+      width: 140px; flex-shrink: 0;
+      padding: 12px 16px;
+      border-right: 1px solid var(--border);
+      font-family: var(--fmono); font-size: 0.62rem;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      color: var(--t2);
+      display: flex; align-items: center;
+    }
+    .oracle-val {
+      flex: 1; padding: 12px 20px;
+      font-family: var(--fbody); font-size: 0.9rem;
+      color: var(--t1); line-height: 1.5;
+      display: flex; align-items: center;
+    }
+    .oracle-val em { color: var(--g1); font-style: italic; }
+
+    .red-flag-box {
+      background: linear-gradient(135deg, rgba(224,48,80,0.06), var(--bg2));
+      border: 1px solid rgba(224,48,80,0.3);
+      border-radius: 8px; padding: 20px 24px;
+      margin-top: 16px;
+    }
+    .rf-title { font-family: var(--fheading); font-size: 0.88rem; color: var(--crimson); margin-bottom: 10px; letter-spacing: 0.06em; }
+    .rf-text { font-family: var(--fbody); font-size: 0.88rem; color: var(--t1); line-height: 1.7; }
+
+    .flags-row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 20px; }
+    .flag-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 20px;
+      font-family: var(--fbody); font-style: italic; font-size: 0.72rem;
+      border: 1px solid var(--border); color: var(--t2);
+      background: var(--surface); transition: all 0.15s;
+    }
+    .flag-chip.on-good  { border-color: rgba(40,216,128,0.4); color: var(--green); background: rgba(40,216,128,0.06); }
+    .flag-chip.on-warn  { border-color: rgba(240,160,32,0.4); color: var(--amber); background: rgba(240,160,32,0.06); }
+    .flag-chip.on-bad   { border-color: rgba(224,48,80,0.4);  color: var(--crimson); background: rgba(224,48,80,0.06); }
+    .flag-chip.off      { opacity: 0.28; }
+
+    /* ════ BVJ ════ */
+    .bvj-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .bvj-grid { grid-template-columns: 1fr; } }
+    .bvj-card { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 20px; }
+    .bvj-title { font-family: var(--fheading); font-size: 0.88rem; color: var(--g1); margin-bottom: 14px; letter-spacing: 0.06em; }
+    .bvj-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); font-size: 0.82rem; }
+    .bvj-row:last-child { border-bottom: none; }
+    .bvj-k { font-family: var(--fmono); font-size: 0.65rem; color: var(--t2); letter-spacing: 0.08em; }
+    .bvj-v { font-family: var(--fmono); font-size: 0.72rem; color: var(--g1); }
+
+    /* ════ FOOTER ════ */
+    footer {
+      text-align: center; padding: 40px 24px;
+      font-family: var(--fmono); font-size: 0.68rem;
+      color: var(--t3); letter-spacing: 0.12em;
+      border-top: 1px solid var(--border);
+      background: var(--bg1);
+    }
+    footer span { color: var(--g3); }
+
+    /* ════ HIDDEN ════ */
+    .hidden { display: none !important; }
+
+    /* ════ SIDEBAR TOGGLE (mobile) ════ */
+    #sidebar-toggle {
+      display: none; position: fixed; top: 14px; left: 14px; z-index: 500;
+      width: 32px; height: 32px; background: var(--surface); border: 1px solid var(--border);
+      border-radius: 6px; cursor: pointer; align-items: center; justify-content: center;
+      font-size: 1rem; color: var(--t1);
+    }
     @media (max-width: 900px) {
-      #mobile-jut-bar { display: block; }
-      /* also make topbar pills wrap gracefully if they show */
-      .jut-pills-mini { max-width: 100%; }
-    }
-    @media (max-width: 600px) {
-      /* on very small screens, push sections below both bars */
-      #shell { padding-top: 0; }
-      .section { scroll-margin-top: calc(var(--topbar-h) + 54px); }
-      .hero    { scroll-margin-top: calc(var(--topbar-h) + 54px); }
+      :root { --sidebar-w: 0px; }
+      #sidebar { transform: translateX(-100%); width: 220px; transition: transform 0.3s ease; }
+      #sidebar.open { transform: translateX(0); }
+      #main { margin-left: 0; }
+      #sidebar-toggle { display: flex; }
+      .section { padding: 32px 20px; }
+      .hero { padding: 36px 20px 32px; }
+      .hero-stats { flex-direction: column; }
+      .hs { border-right: none; border-bottom: 1px solid var(--border); }
+      .hs:last-child { border-bottom: none; }
+      .topbar-jut-select { display: none; }
+      .subj-grid { grid-template-columns: 1fr; }
+      .charts-2col { grid-template-columns: 1fr; }
     }
 
+    /* scroll-reveal */
+    .reveal { opacity: 0; transform: translateY(16px); transition: opacity 0.5s ease, transform 0.5s ease; }
+    .reveal.in { opacity: 1; transform: translateY(0); }
   </style>
 </head>
 <body>
-<div class="rope-top"></div>
+<div class="atmo"></div>
+<div class="noise"></div>
 <div class="embers" id="embers"></div>
 
+<!-- ── LOADING ── -->
 <div id="loading">
-  <span class="load-skull">☠️</span>
-  <div class="load-text">Fetchin' yer scrolls...</div>
-  <div class="load-bar-wrap"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-crest">
+    <div class="load-ring"></div>
+    <div class="load-ring load-ring-2"></div>
+    <div class="load-glow"></div>
+    <span class="load-skull">☠️</span>
+  </div>
+  <div class="load-title">FireWave</div>
+  <div class="load-sub">Fetching yer battle records…</div>
+  <div class="load-progress"><div class="load-bar" id="load-bar"></div></div>
+  <div class="load-pct" id="load-pct">0%</div>
 </div>
 
-<div id="main-content" class="hidden">
-  <nav class="top-nav">
-    <a href="/">⚓ Home</a>
-    <a href="#overview">📊 Overview</a>
-    <a href="#subjects">🎯 Subjects</a>
-    <a href="#trend">📈 Trend</a>
-    <a href="#fleet">⚔️ Fleet</a>
-    <a href="#damage">💀 NM</a>
-    <a href="#projections">🔮 Proj</a>
-    <a href="#momentum">🔥 Momentum</a>
-    <a href="#career">🏆 Career</a>
-    <a href="#deep-analysis">🔬 Deep</a>
-    <a href="#target">🎯 Target</a>
-    <a href="#board">📜 Board</a>
-    <a href="#advice">🧭 Oracle</a>
+<!-- ── SIDEBAR TOGGLE (mobile) ── -->
+<button id="sidebar-toggle" onclick="document.getElementById('sidebar').classList.toggle('open')">☰</button>
+
+<!-- ── TOPBAR ── -->
+<div id="topbar" class="hidden">
+  <div class="topbar-logo"><a href="/">☠️ FireWave</a></div>
+  <div class="topbar-divider"></div>
+  <div class="topbar-name" id="tb-name">—</div>
+  <div class="topbar-meta" id="tb-meta">—</div>
+  <div class="topbar-jut-select">
+    <span class="topbar-jut-label">Select JUT:</span>
+    <div class="jut-pills-mini" id="jut-pills-mini"></div>
+  </div>
+</div>
+
+<!-- ── SHELL ── -->
+<div id="shell" class="hidden">
+
+  <!-- SIDEBAR -->
+  <nav id="sidebar">
+    <a href="/" class="nav-home">← Back to Home</a>
+    <div class="arch-mini" id="arch-mini">
+      <span class="arch-mini-icon" id="am-icon">🧭</span>
+      <div class="arch-mini-name" id="am-name">—</div>
+      <div class="arch-mini-desc" id="am-desc">—</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="nav-group-label">Voyage</div>
+      <a class="nav-item" href="#hero"><span class="ni">🏴</span>Command</a>
+      <a class="nav-item" href="#overview"><span class="ni">📊</span>Overview</a>
+      <a class="nav-item" href="#subjects"><span class="ni">🎯</span>Subjects</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Analytics</div>
+      <a class="nav-item" href="#trend"><span class="ni">📈</span>Score Trend</a>
+      <a class="nav-item" href="#fleet"><span class="ni">⚔️</span>Fleet Rank</a>
+      <a class="nav-item" href="#damage"><span class="ni">💀</span>NM Damage</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Intelligence</div>
+      <a class="nav-item" href="#projections"><span class="ni">🔮</span>Projections</a>
+      <a class="nav-item" href="#momentum"><span class="ni">🔥</span>Momentum</a>
+      <a class="nav-item" href="#career"><span class="ni">🏆</span>Career</a>
+    </div>
+    <div class="nav-group">
+      <div class="nav-group-label">Debrief</div>
+      <a class="nav-item" href="#target"><span class="ni">🎯</span>Target</a>
+      <a class="nav-item" href="#board"><span class="ni">📜</span>Board vs JUT</a>
+      <a class="nav-item" href="#advice"><span class="ni">🧭</span>Oracle</a>
+    </div>
   </nav>
 
-  <!-- ── MOBILE JUT SELECTOR BAR ── -->
-  <div id="mobile-jut-bar" style="position:sticky;top:48px;z-index:99;background:rgba(10,8,6,.97);backdrop-filter:blur(12px);border-bottom:1px solid var(--fog);padding:8px 14px 8px;overflow-x:auto;overflow-y:hidden;white-space:nowrap;scrollbar-width:none;-webkit-overflow-scrolling:touch;display:flex;align-items:center;gap:8px">
-    <span style="font-family:'Share Tech Mono',monospace;font-size:.55rem;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;flex-shrink:0">Select JUT</span>
-    <div id="mobile-jut-pills" style="display:flex;gap:5px;flex-wrap:nowrap"></div>
-  </div>
+  <!-- MAIN -->
+  <main id="main">
 
-  <div class="page">
-    <div class="hero">
-      <span class="hero-skull">☠️</span>
-      <h1 class="hero-name" id="hero-name">—</h1>
-      <p class="hero-meta" id="hero-meta">—</p>
-      <div class="hero-divider"><span>⚓</span></div>
-      <div class="archetype-banner">
-        <span class="arch-icon" id="arch-icon">🧭</span>
-        <div>
-          <div class="arch-name" id="arch-name">—</div>
-          <div class="arch-desc" id="arch-desc">—</div>
+    <!-- HERO -->
+    <section class="hero" id="hero">
+      <div class="hero-inner">
+        <div class="hero-row">
+          <div class="hero-crest"><span class="hero-skull">☠️</span></div>
+          <div class="hero-info">
+            <div class="hero-grade-chip" id="h-chip">⚓ FireWave JUT</div>
+            <h1 class="hero-name" id="h-name">—</h1>
+            <div class="hero-meta" id="h-meta">—</div>
+            <div class="hero-motiv" id="h-motiv">—</div>
+            <div class="arch-hero" id="arch-hero">
+              <span class="arch-hero-icon" id="ah-icon">🧭</span>
+              <div>
+                <div class="arch-hero-name" id="ah-name">—</div>
+                <div class="arch-hero-desc" id="ah-desc">—</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="hero-stats" id="hero-stats">
+          <div class="hs hs-score">
+            <div class="hs-label">Score</div>
+            <div class="hs-value" id="hs-score">—</div>
+            <div class="hs-note" id="hs-score-note">—</div>
+            <div class="hs-delta" id="hs-score-delta"></div>
+          </div>
+          <div class="hs hs-rank">
+            <div class="hs-label">Rank</div>
+            <div class="hs-value" id="hs-rank">—</div>
+            <div class="hs-note" id="hs-rank-note">—</div>
+          </div>
+          <div class="hs hs-pct">
+            <div class="hs-label">Percentile</div>
+            <div class="hs-value" id="hs-pct">—</div>
+            <div class="hs-note" id="hs-pct-note">—</div>
+          </div>
+          <div class="hs hs-acc">
+            <div class="hs-label">Accuracy</div>
+            <div class="hs-value" id="hs-acc">—</div>
+            <div class="hs-note" id="hs-acc-note">—</div>
+          </div>
         </div>
       </div>
-      <p class="motiv-tag" id="motiv-tag">—</p>
-      <div class="jut-selector-wrap" id="jut-pills"></div>
-    </div>
+    </section>
 
-    <div class="section" id="overview">
-      <div class="section-title">📊 Overview — This Exam</div>
-      <div class="section-sub">yer vital signs for the selected JUT</div>
-      <div class="section-divider"></div>
-      <div class="cards" id="overview-cards"></div>
-    </div>
+    <!-- OVERVIEW -->
+    <section class="section reveal" id="overview">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-gold">📊</div>
+          <div>
+            <div class="section-title">Overview — This Exam</div>
+            <div class="section-sub">Vital signs for the selected JUT</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-rule"></div>
+      <div class="cg" id="overview-cards"></div>
+    </section>
 
-    <div class="section" id="subjects">
-      <div class="section-title">🎯 Subject Breakdown</div>
-      <div class="section-sub">Physics · Chemistry · Maths</div>
-      <div class="section-divider"></div>
+    <!-- SUBJECTS -->
+    <section class="section reveal" id="subjects">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-teal">🎯</div>
+          <div>
+            <div class="section-title">Subject Breakdown</div>
+            <div class="section-sub">Physics · Chemistry · Maths</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-rule"></div>
       <div class="subj-grid" id="subj-grid"></div>
-    </div>
+    </section>
 
-    <div class="section" id="trend">
-      <div class="section-title">📈 Score Journey</div>
-      <div class="section-sub">yer voyage across every JUT — absent ones marked ✕</div>
-      <div class="section-divider"></div>
-      <div class="chart-wrap"><canvas id="score-chart"></canvas></div>
-      <div class="two-col">
-        <div class="chart-wrap"><canvas id="subj-chart"></canvas></div>
-        <div class="chart-wrap"><canvas id="acc-chart"></canvas></div>
+    <!-- TREND -->
+    <section class="section reveal" id="trend">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-violet">📈</div>
+          <div>
+            <div class="section-title">Score Journey</div>
+            <div class="section-sub">Voyage across every JUT — absences marked</div>
+          </div>
+        </div>
       </div>
-    </div>
+      <div class="section-rule"></div>
+      <div class="chart-panel">
+        <div class="chart-title">Score Trajectory vs Target</div>
+        <canvas id="score-chart"></canvas>
+      </div>
+      <div class="charts-2col">
+        <div class="chart-panel">
+          <div class="chart-title">Subject Marks per JUT</div>
+          <canvas id="subj-chart"></canvas>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-title">Subject Accuracy %</div>
+          <canvas id="acc-chart"></canvas>
+        </div>
+      </div>
+    </section>
 
-    <div class="section" id="fleet">
-      <div class="section-title">⚔️ Fleet Comparisons</div>
-      <div class="section-sub">how ye rank among yer peers</div>
-      <div class="section-divider"></div>
+    <!-- FLEET -->
+    <section class="section reveal" id="fleet">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-teal">⚔️</div>
+          <div>
+            <div class="section-title">Fleet Comparisons</div>
+            <div class="section-sub">Overall · Gender · Mentor · Class</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-rule"></div>
       <div class="fleet-grid" id="fleet-grid"></div>
-    </div>
+    </section>
 
-    <div class="section" id="damage">
-      <div class="section-title">💀 Negative Marking Damage</div>
-      <div class="section-sub">every wrong answer cost ye 1 mark</div>
-      <div class="section-divider"></div>
-      <div class="cards" id="damage-cards"></div>
-      <div class="two-col">
-        <div class="chart-wrap"><canvas id="nm-chart"></canvas></div>
-        <div class="chart-wrap"><canvas id="eff-chart"></canvas></div>
+    <!-- NM DAMAGE -->
+    <section class="section reveal" id="damage">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-crim">💀</div>
+          <div>
+            <div class="section-title">Negative Marking Damage</div>
+            <div class="section-sub">Every wrong answer cost ye 1 mark</div>
+          </div>
+        </div>
       </div>
-    </div>
+      <div class="section-rule"></div>
+      <div class="cg cg-narrow" id="damage-cards"></div>
+      <div class="charts-2col" style="margin-top:16px">
+        <div class="chart-panel">
+          <div class="chart-title">Attempt Breakdown per Subject</div>
+          <canvas id="nm-chart"></canvas>
+        </div>
+        <div class="chart-panel">
+          <div class="chart-title">Efficiency vs Fleet</div>
+          <canvas id="eff-chart"></canvas>
+        </div>
+      </div>
+    </section>
 
-    <div class="section" id="projections">
-      <div class="section-title">🔮 Projection Engine</div>
-      <div class="section-sub">what yer score could be — no guesswork</div>
-      <div class="section-divider"></div>
+    <!-- PROJECTIONS -->
+    <section class="section reveal" id="projections">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-violet">🔮</div>
+          <div>
+            <div class="section-title">Projection Engine</div>
+            <div class="section-sub">What-if scenarios — computed, not guessed</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-rule"></div>
       <div class="proj-grid" id="proj-grid"></div>
-      <div style="margin-top:18px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">💡 Improvement Headroom</div>
-        <div class="cards" id="headroom-cards"></div>
-      </div>
-      <div style="margin-top:18px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">🎯 Skip Discipline</div>
-        <div class="cards" id="skip-cards"></div>
-      </div>
-    </div>
 
-    <div class="section" id="momentum">
-      <div class="section-title">🔥 Momentum & Learning Velocity</div>
-      <div class="section-sub">how hot is yer streak and how fast ye improving</div>
-      <div class="section-divider"></div>
-      <div class="momentum-card" id="momentum-card"></div>
-      <div class="streak-wrap" id="streak-wrap"></div>
-      <div style="margin-top:18px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">🎭 Subject Personalities</div>
+      <div style="margin-top:28px">
+        <div style="font-family:var(--fheading);font-size:0.82rem;color:var(--t1);letter-spacing:0.08em;margin-bottom:12px">💡 Improvement Headroom</div>
+        <div class="cg cg-narrow" id="headroom-cards"></div>
+      </div>
+      <div style="margin-top:20px">
+        <div style="font-family:var(--fheading);font-size:0.82rem;color:var(--t1);letter-spacing:0.08em;margin-bottom:12px">🎯 Skip Discipline</div>
+        <div class="cg cg-narrow" id="skip-cards"></div>
+      </div>
+    </section>
+
+    <!-- MOMENTUM -->
+    <section class="section reveal" id="momentum">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-amber">🔥</div>
+          <div>
+            <div class="section-title">Momentum & Learning Velocity</div>
+            <div class="section-sub">Streak, velocity, subject personalities</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-rule"></div>
+      <div class="momentum-panel" id="momentum-panel"></div>
+      <div class="streak-row" id="streak-row"></div>
+      <div style="margin-top:8px">
+        <div style="font-family:var(--fheading);font-size:0.82rem;color:var(--t1);letter-spacing:0.08em;margin-bottom:12px">🎭 Subject Personalities</div>
         <div class="personality-grid" id="personality-grid"></div>
       </div>
-    </div>
+    </section>
 
-    <div class="section" id="career">
-      <div class="section-title">🏆 Career Statistics</div>
-      <div class="section-sub">yer legacy across all JUTs sailed</div>
-      <div class="section-divider"></div>
+    <!-- CAREER -->
+    <section class="section reveal" id="career">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-gold">🏆</div>
+          <div>
+            <div class="section-title">Career Statistics</div>
+            <div class="section-sub">Legacy across all JUTs sailed</div>
+          </div>
+        </div>
+      </div>
+      <div class="section-rule"></div>
       <div class="bests-grid" id="career-bests"></div>
-      <div style="margin-top:18px">
+      <div style="margin-top:20px">
         <div class="table-wrap">
           <table>
             <thead><tr>
-              <th>JUT</th><th>Status</th><th>Grd</th>
-              <th class="num">Score</th><th class="num">Rank</th><th class="num">%ile</th>
+              <th>JUT</th><th>Status</th><th>Grade</th>
+              <th class="num">Score</th><th class="num">Rank</th><th class="num">Pct</th>
               <th class="num">Phy</th><th class="num">Chem</th><th class="num">Math</th>
-              <th class="num">Acc</th><th class="num">Wrg</th>
-              <th>Trend</th><th>Archetype</th>
+              <th class="num">Acc</th><th class="num">Wrong</th><th>Trend</th><th>Archetype</th>
             </tr></thead>
             <tbody id="history-tbody"></tbody>
           </table>
         </div>
       </div>
-    </div>
+    </section>
 
-    <div class="section" id="deep-analysis">
-      <div class="section-title">🔬 Deep Analysis</div>
-      <div class="section-sub">correlations · potential · decomposition · consistency · recovery</div>
-      <div class="section-divider"></div>
-
-      <div class="section-title" style="font-size:.9rem;margin-bottom:10px">🔗 Subject Correlations</div>
-      <div class="section-sub" style="padding-left:0;margin-bottom:12px">do subjects move together? needs 3+ exams</div>
-      <div class="three-col" id="corr-grid"></div>
-
-      <div style="margin-top:22px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">📊 Score Decomposition</div>
-        <div class="cards" id="decomp-cards"></div>
-        <div style="margin-top:12px" class="chart-wrap"><canvas id="decomp-chart"></canvas></div>
+    <!-- TARGET -->
+    <section class="section reveal" id="target">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-green">🎯</div>
+          <div>
+            <div class="section-title">Target Tracker</div>
+            <div class="section-sub">Chasing the mark</div>
+          </div>
+        </div>
       </div>
+      <div class="section-rule"></div>
+      <div id="target-verdict-wrap"></div>
+      <div class="cg" id="target-cards"></div>
+    </section>
 
-      <div style="margin-top:22px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">🔮 Potential vs Actual</div>
-        <div class="cards" id="potential-cards"></div>
-        <div style="margin-top:12px" class="chart-wrap"><canvas id="potential-chart"></canvas></div>
+    <!-- BOARD vs JUT -->
+    <section class="section reveal" id="board">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-amber">📜</div>
+          <div>
+            <div class="section-title">Board vs JUT Performance</div>
+            <div class="section-sub">School marks vs JUT accuracy</div>
+          </div>
+        </div>
       </div>
-
-      <div style="margin-top:22px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">🎯 Consistency Deep Dive</div>
-        <div class="three-col" id="consistency-grid"></div>
-      </div>
-
-      <div style="margin-top:22px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">🔄 Recovery Analysis</div>
-        <div id="recovery-banner"></div>
-        <div class="cards" id="recovery-cards"></div>
-      </div>
-    </div>
-
-    <div class="section" id="target">
-      <div class="section-title">🎯 Target Tracker</div>
-      <div class="section-sub">how close are ye to yer goal</div>
-      <div class="section-divider"></div>
-      <div class="target-card" id="target-card">
-        <div class="target-verdict" id="target-verdict">—</div>
-        <div class="target-sub" id="target-sub">—</div>
-      </div>
-      <div class="cards" id="target-cards"></div>
-    </div>
-
-    <div class="section" id="board">
-      <div class="section-title">📜 Board vs JUT Performance</div>
-      <div class="section-sub">school marks vs JUT accuracy</div>
-      <div class="section-divider"></div>
+      <div class="section-rule"></div>
       <div class="bvj-grid" id="bvj-grid"></div>
-    </div>
+    </section>
 
-    <div class="section" id="advice">
-      <div class="section-title">🧭 The Oracle Speaks</div>
-      <div class="section-sub">strength, weakness, red flags, path forward</div>
-      <div class="section-divider"></div>
-      <div class="advice-box" id="advice-box"></div>
-      <div style="margin-top:14px" id="rf-wrap"></div>
-      <div style="margin-top:18px">
-        <div class="section-title" style="font-size:.9rem;margin-bottom:10px">⚑ Exam Flags</div>
-        <div class="flags-strip" id="flags-strip"></div>
+    <!-- ORACLE -->
+    <section class="section reveal" id="advice">
+      <div class="section-header">
+        <div class="sh-row">
+          <div class="sh-icon shi-violet">🧭</div>
+          <div>
+            <div class="section-title">The Oracle Speaks</div>
+            <div class="section-sub">Strength · Weakness · Red Flags · Path Forward</div>
+          </div>
+        </div>
       </div>
-    </div>
-  </div>
+      <div class="section-rule"></div>
+      <div class="oracle-box" id="oracle-box"></div>
+      <div id="rf-wrap"></div>
+      <div class="flags-row" id="flags-row"></div>
+    </section>
 
-  <footer>
-    <div class="footer-skull">☠ &nbsp; ⚓ &nbsp; ☠</div>
-    🏴‍☠️ &nbsp; FireWave JUT Reports &nbsp; · &nbsp; results.firewave.in &nbsp; · &nbsp; Chart yer course, Captain 🏴‍☠️
-  </footer>
+    <footer>
+      ☠ &nbsp; <span>results.firewave.in</span> &nbsp; · &nbsp; FireWave JUT Reports &nbsp; · &nbsp; Chart yer course, Captain &nbsp; ☠
+    </footer>
+  </main>
 </div>
 
 <script>
-const q=s=>document.querySelector(s);
-const el=(tag,cls,html)=>{const e=document.createElement(tag);if(cls)e.className=cls;if(html!==undefined)e.innerHTML=html;return e;};
-const parseNum=v=>{const n=parseFloat(v);return isNaN(n)?null:n;};
-const parseInt2=v=>{const n=parseInt(v);return isNaN(n)?null:n;};
-const normalizeId=v=>String(v||'').trim().replace(/\.0+$/,'');
-const isMobile=()=>window.innerWidth<=600;
+/* ════════════════════ UTILS ════════════════════ */
+const $  = s => document.querySelector(s);
+const $$ = s => document.querySelectorAll(s);
+const el = (tag, cls, html) => { const e = document.createElement(tag); if (cls) e.className = cls; if (html !== undefined) e.innerHTML = html; return e; };
+const pf = v => { const n = parseFloat(v); return isNaN(n) ? null : n; };
+const pi = v => { const n = parseInt(v); return isNaN(n) ? null : n; };
+const nid = v => String(v || '').trim().replace(/\.0+$/, '');
+const trend = t => ({ RISING: '📈', FALLING: '📉', STABLE: '➡️', DEBUT: '🆕' }[t] || '➡️');
+const hbar = (val, max, color, h = 5) => {
+  const w = Math.min(100, max > 0 ? (val / max * 100) : 0).toFixed(1);
+  return `<div style="height:${h}px;background:var(--bg3);border-radius:3px;overflow:hidden"><div style="width:${w}%;height:100%;background:${color};border-radius:2px;box-shadow:0 0 6px ${color}44;transition:width .8s ease"></div></div>`;
+};
 
-function hbar(val,max,color,height=7){
-  const w=Math.min(100,max>0?(val/max*100):0).toFixed(1);
-  return `<div style="background:#1a1208;border-radius:3px;height:${height}px;overflow:hidden;border:1px solid #3d3225"><div style="width:${w}%;height:100%;background:${color};border-radius:2px;transition:width .8s ease;box-shadow:0 0 6px ${color}55"></div></div>`;
-}
-function trendEmoji(t){return{RISING:'📈',FALLING:'📉',STABLE:'➡️',DEBUT:'🆕'}[t]||'➡️'}
-function corrColor(label){
-  if(!label)return'corr-none';
-  if(label.includes('POSITIVE'))return'corr-pos';
-  if(label.includes('NEGATIVE'))return'corr-neg';
-  return'corr-none';
-}
+/* load bar */
+const lb = $('#load-bar'), lp = $('#load-pct');
+const adv = to => { if(lb) lb.style.width = to+'%'; if(lp) lp.textContent = to+'%'; };
 
-const loadBar=q('#load-bar');
-function advanceLoad(to){if(loadBar)loadBar.style.width=to+'%'}
+/* Chart defaults */
+Chart.defaults.color = '#706860';
+Chart.defaults.borderColor = '#252540';
+Chart.defaults.font.family = "'Share Tech Mono', monospace";
+Chart.defaults.font.size = 11;
+const CC = { gold:'#f0c050', teal:'#3dd6c8', violet:'#8060d8', green:'#28d880', crimson:'#e03050', amber:'#f0a020', muted:'#706860' };
 
-// ── Chart.js mobile-aware defaults
-Chart.defaults.color='#7a6a50';
-Chart.defaults.borderColor='#3d3225';
-Chart.defaults.font.family="'Share Tech Mono', monospace";
-Chart.defaults.font.size=10;
-Chart.defaults.plugins.legend.labels.boxWidth=10;
-Chart.defaults.plugins.legend.labels.padding=8;
+let charts = {};
+const dc = k => { if(charts[k]){ charts[k].destroy(); delete charts[k]; } };
 
-const CC={gold:'#f0b840',teal:'#5cb8b2',green:'#2ecc71',red:'#c0392b',amber:'#e8a020',magenta:'#c05ca0',muted:'#7a6a50'};
+/* ════════════════════ INIT ════════════════════ */
+const params  = new URLSearchParams(window.location.search);
+const STUDENT = nid(params.get('student'));
+if (!STUDENT) window.location.href = '404.html';
 
-// Shared mobile-aware chart options
-function chartOpts(title,extra={}){
-  const mob=isMobile();
-  return {
-    responsive:true,
-    maintainAspectRatio:true,
-    aspectRatio: mob ? 1.4 : 2,
-    plugins:{
-      legend:{labels:{color:'#7a6a50',boxWidth:10,font:{size:mob?9:10}}},
-      title:{display:true,text:title,color:'#c8922a',font:{size:mob?11:13}}
-    },
-    ...extra
-  };
-}
-function scaleOpts(min,max,label){
-  const mob=isMobile();
-  return {
-    x:{grid:{color:'#2a2218'},ticks:{color:'#7a6a50',font:{size:mob?8:10},maxTicksLimit:mob?6:undefined,maxRotation:mob?45:0}},
-    y:{grid:{color:'#2a2218'},ticks:{color:'#7a6a50',font:{size:mob?8:10}},min,max,
-       ...(label?{title:{display:!mob,text:label,color:'#7a6a50'}}:{})}
-  };
-}
+adv(10);
 
-let charts={};
-function destroyChart(k){if(charts[k]){charts[k].destroy();delete charts[k];}}
+Papa.parse('./jut_student_results.csv', {
+  header: true, download: true, skipEmptyLines: true, dynamicTyping: false,
+  complete(results) {
+    adv(70);
+    const allRows = results.data;
+    const rows = allRows.filter(r => nid(r.student_id) === STUDENT);
+    if (!rows.length) { window.location.href = '404.html'; return; }
+    adv(90);
 
-const params=new URLSearchParams(window.location.search);
-const STUDENT=normalizeId(params.get('student'));
-if(!STUDENT)window.location.href='404.html';
-advanceLoad(10);
+    rows.sort((a, b) => (pi(a.jut_number)||0) - (pi(b.jut_number)||0));
+    const presentRows = rows.filter(r => r.absent !== '1');
+    let activeJut = presentRows.length ? presentRows[presentRows.length-1].jut_id : rows[rows.length-1].jut_id;
+    const base = presentRows[0] || rows[0];
 
-Papa.parse('./jut_student_results.csv',{
-  header:true,download:true,skipEmptyLines:true,dynamicTyping:false,
-  complete(results){
-    advanceLoad(70);
-    const allRows=results.data;
-    const rows=allRows.filter(r=>normalizeId(r.student_id)===STUDENT);
-    if(!rows.length){window.location.href='404.html';return;}
-    advanceLoad(90);
+    /* topbar */
+    $('#tb-name').textContent = base.name || 'Unknown Sailor';
+    document.title = `${base.name || 'Sailor'} — FireWave`;
 
-    rows.sort((a,b)=>(parseInt2(a.jut_number)||0)-(parseInt2(b.jut_number)||0));
-    const presentRows=rows.filter(r=>r.absent!=='1');
-    let activeJut=presentRows.length?presentRows[presentRows.length-1].jut_id:rows[rows.length-1].jut_id;
-    const base=presentRows[0]||rows[0];
+    adv(100);
+    setTimeout(() => {
+      $('#loading').classList.add('fade-out');
+      setTimeout(() => {
+        $('#loading').classList.add('hidden');
+        $('#topbar').classList.remove('hidden');
+        $('#shell').classList.remove('hidden');
+        buildPills();
+        render(activeJut);
+        initReveal();
+        initNavHighlight();
+      }, 400);
+    }, 350);
 
-    q('#hero-name').textContent=base.name||'Unknown Sailor';
-    document.title=`${base.name||'Sailor'} — FireWave JUT`;
-    q('#hero-meta').textContent=[
-      base.gender?base.gender.charAt(0)+base.gender.slice(1).toLowerCase():null,
-      base.class?`Class ${base.class}`:null,
-      base.mentor?`Mentor: ${base.mentor}`:null,
-      base.blood_group||null,
-      base.age?`Age ${base.age}`:null,
-      base.target_score?`Target: ${base.target_score}`:null
-    ].filter(Boolean).join('  ·  ');
-
-    advanceLoad(100);
-    setTimeout(()=>{
-      q('#loading').style.opacity='0';q('#loading').style.transition='opacity .4s';
-      setTimeout(()=>{q('#loading').classList.add('hidden');q('#main-content').classList.remove('hidden');},400);
-      setTimeout(()=>render(activeJut),450);
-    },300);
-
-    function buildPills(){
-      const wrap=q('#jut-pills');wrap.innerHTML='';
-      const mwrap=q('#mobile-jut-pills');if(mwrap)mwrap.innerHTML='';
-      rows.forEach(r=>{
-        const absent=r.absent==='1';
-        const active=r.jut_id===activeJut;
-        const label=r.jut_id.toUpperCase()+(absent?' ✕':'');
-        const titleTxt=absent?'Absent':`Score: ${r.score} | Grade: ${r.exam_grade}`;
-        const handler=absent?null:()=>{activeJut=r.jut_id;buildPills();render(activeJut);};
-
-        /* hero pills */
-        const pill=el('button','jut-pill'+(absent?' absent':'')+(active?' active':''));
-        pill.textContent=label; pill.title=titleTxt;
-        if(handler)pill.onclick=handler;
-        wrap.appendChild(pill);
-
-        /* mobile bar pills */
-        if(mwrap){
-          const mp=el('button','mjp'+(absent?' absent':'')+(active?' active':''));
-          mp.textContent=label; mp.title=titleTxt;
-          if(handler)mp.onclick=handler;
-          if(active){
-            requestAnimationFrame(()=>{
-              const bar=q('#mobile-jut-bar');
-              if(bar)bar.scrollLeft=mp.offsetLeft-bar.offsetWidth/2+mp.offsetWidth/2;
-            });
-          }
-          mwrap.appendChild(mp);
-        }
+    /* ── PILLS ── */
+    function buildPills() {
+      const wrap = $('#jut-pills-mini'); wrap.innerHTML = '';
+      rows.forEach(r => {
+        const btn = el('button', 'jp' + (r.absent==='1'?' absent':'') + (r.jut_id===activeJut?' active':''));
+        btn.textContent = r.jut_id.toUpperCase() + (r.absent==='1'?'✕':'');
+        btn.title = r.absent==='1' ? 'Absent' : `Score: ${r.score}`;
+        if (r.absent !== '1') btn.onclick = () => { activeJut = r.jut_id; buildPills(); render(activeJut); };
+        wrap.appendChild(btn);
       });
     }
-    buildPills();
 
-    function render(jid){
-      const r=rows.find(x=>x.jut_id===jid)||{};
-      if(!r||r.absent==='1')return;
+    /* ── RENDER ── */
+    function render(jid) {
+      const r = rows.find(x => x.jut_id === jid) || {};
+      if (!r || r.absent === '1') return;
 
-      q('#arch-icon').textContent=r.archetype_icon||'🧭';
-      q('#arch-name').textContent=r.archetype_name||'—';
-      q('#arch-desc').textContent=r.archetype_desc||'—';
-      q('#motiv-tag').textContent=r.motivational_tag||'';
+      /* Topbar meta */
+      const metaParts = [r.gender, r.class?`Class ${r.class}`:null, r.mentor?`Mentor: ${r.mentor}`:null].filter(Boolean);
+      $('#tb-meta').textContent = metaParts.join(' · ');
 
-      // OVERVIEW
-      const oc=q('#overview-cards');oc.innerHTML='';
-      [{label:'Score',val:r.score,note:`${r.score_vs_max} · Grade ${r.exam_grade}`,cls:'',delta:r.score_vs_prev},
-       {label:'Rank',val:`#${r.rank}`,note:r.rank_title,cls:'teal',delta:r.rank_vs_prev?-parseFloat(r.rank_vs_prev):null},
-       {label:'Percentile',val:r.top_x_pct,note:r.standing,cls:'amber',delta:null},
-       {label:'Accuracy',val:`${parseNum(r.overall_acc)||0}%`,note:`${r.total_correct}/${r.total_att} correct`,cls:'',delta:r.acc_vs_prev},
-       {label:'Efficiency',val:r.efficiency,note:r.overall_efficiency_tier,cls:'',delta:null},
-       {label:'Peer Beat',val:r.peer_beat_count?.split(' ')[1]||'—',note:r.peer_beat_count,cls:'green',delta:null},
-       {label:'Marks Left',val:r.marks_left_total,note:`${r.unattempted_total} Qs`,cls:'amber',delta:null},
-       {label:'Potential',val:r.potential_score,note:`${r.potential_score_pct}%`,cls:'',delta:null},
-       {label:'Sweet Spot',val:r.sweet_spot_verdict?.split('—')[0]?.trim()||'—',note:r.sweet_spot_verdict,cls:'',delta:null},
-       {label:'Headroom',val:r.total_improvement_headroom,note:r.headroom_label,cls:'teal',delta:null},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        const dv=c.delta!==null&&c.delta!==undefined&&c.delta!==''?parseFloat(c.delta):null;
-        const dh=dv!==null&&!isNaN(dv)&&dv!==0?`<span class="card-delta ${dv>0?'delta-up':'delta-down'}">${dv>0?'↑':'↓'}${Math.abs(dv)}</span>`:'';
-        card.innerHTML=`${dh}<div class="card-label">${c.label}</div><div class="card-value">${c.val||'—'}</div><div class="card-note">${c.note||''}</div>`;
+      /* Archetype (sidebar + hero) */
+      ['am-icon','ah-icon'].forEach(id => $(`#${id}`).textContent = r.archetype_icon || '🧭');
+      ['am-name','ah-name'].forEach(id => $(`#${id}`).textContent = r.archetype_name || '—');
+      ['am-desc','ah-desc'].forEach(id => $(`#${id}`).textContent = r.archetype_desc || '—');
+      $('#h-chip').textContent = `⚓ ${r.jut_id?.toUpperCase()} · Grade ${r.exam_grade || '—'}`;
+
+      /* Hero */
+      $('#h-name').textContent = r.name || '—';
+      const mParts = [
+        r.gender ? metaPill(r.gender) : '',
+        r.class  ? metaPill(`Class ${r.class}`) : '',
+        r.mentor ? metaPill(`Mentor: ${r.mentor}`) : '',
+        r.blood_group ? metaPill(r.blood_group) : '',
+        r.age    ? metaPill(`Age ${r.age}`) : '',
+        r.target_score ? metaPill(`Target ${r.target_score}`) : '',
+      ].filter(Boolean);
+      $('#h-meta').innerHTML = mParts.join('');
+      $('#h-motiv').textContent = r.motivational_tag || '';
+
+      function metaPill(txt) { return `<span class="hero-meta-pill">${txt}</span>`; }
+
+      /* Hero stats */
+      $('#hs-score').textContent = r.score || '—';
+      $('#hs-score-note').textContent = r.score_vs_max || '';
+      const sd = pf(r.score_vs_prev);
+      $('#hs-score-delta').innerHTML = sd !== null && sd !== 0 ? `<span class="${sd>0?'up':'dn'}">${sd>0?'↑':'↓'}${Math.abs(sd)} vs prev</span>` : '';
+      $('#hs-rank').textContent = `#${r.rank||'—'}`;
+      $('#hs-rank-note').textContent = r.rank_title || '';
+      $('#hs-pct').textContent = r.top_x_pct || '—';
+      $('#hs-pct-note').textContent = r.standing || '';
+      $('#hs-acc').textContent = `${pf(r.overall_acc)||0}%`;
+      $('#hs-acc-note').textContent = `${r.total_correct}/${r.total_att} correct`;
+
+      /* ── OVERVIEW CARDS ── */
+      const oc = $('#overview-cards'); oc.innerHTML = '';
+      [
+        { label:'Efficiency',   val:r.efficiency,          note:r.overall_efficiency_tier, cls:''},
+        { label:'Peer Beat',    val:r.peer_beat_count?.split(' ')[1]||'—', note:r.peer_beat_count, cls:'kc-green'},
+        { label:'Marks Left',   val:r.marks_left_total,    note:`${r.unattempted_total} Qs unattempted`, cls:'kc-amber'},
+        { label:'Potential',    val:r.potential_score,     note:`${r.potential_score_pct}% if perfect`, cls:''},
+        { label:'Sweet Spot',   val:r.sweet_spot_verdict?.split('—')[0]?.trim()||'—', note:r.sweet_spot_verdict, cls:''},
+        { label:'Headroom',     val:r.total_improvement_headroom, note:r.headroom_label, cls:'kc-teal'},
+        { label:'Velocity',     val:r.velocity_label||'—', note:`${r.learning_velocity>0?'+':''}${r.learning_velocity||0} marks/exam`, cls:''},
+        { label:'Consistency',  val:r.consistency_rating||'—', note:`σ = ${r.score_stdev_across_juts||'—'}`, cls:''},
+      ].forEach(c => {
+        const card = el('div', `kc ${c.cls}`);
+        card.innerHTML = `<div class="kc-accent"></div><div class="kc-label">${c.label}</div><div class="kc-value">${c.val||'—'}</div><div class="kc-note">${c.note||''}</div>`;
         oc.appendChild(card);
       });
 
-      // SUBJECTS
-      const sg=q('#subj-grid');sg.innerHTML='';
-      [{name:'⚛️ Physics',m:r.phy_marks,pct:r.phy_score_pct,acc:r.phy_acc,att:r.phy_attempt,cor:r.phy_correct,wr:r.phy_wrong,lost:r.phy_marks_lost,eff:r.phy_efficiency,effvf:r.phy_efficiency_vs_fleet,un:r.unattempted_phy,ml:r.marks_left_phy,best:r.phy_best_ever,avg:r.avg_phy_so_far,tr:r.phy_trend,vmax:r.phy_score_vs_max,pers:r.phy_personality_label,fill:'fill-teal'},
-       {name:'🧪 Chemistry',m:r.chem_marks,pct:r.chem_score_pct,acc:r.chem_acc,att:r.chem_attempt,cor:r.chem_correct,wr:r.chem_wrong,lost:r.chem_marks_lost,eff:r.chem_efficiency,effvf:r.chem_efficiency_vs_fleet,un:r.unattempted_chem,ml:r.marks_left_chem,best:r.chem_best_ever,avg:r.avg_chem_so_far,tr:r.chem_trend,vmax:r.chem_score_vs_max,pers:r.chem_personality_label,fill:'fill-gold'},
-       {name:'📐 Maths',m:r.math_marks,pct:r.math_score_pct,acc:r.math_acc,att:r.math_attempt,cor:r.math_correct,wr:r.math_wrong,lost:r.math_marks_lost,eff:r.math_efficiency,effvf:r.math_efficiency_vs_fleet,un:r.unattempted_math,ml:r.marks_left_math,best:r.math_best_ever,avg:r.avg_math_so_far,tr:r.math_trend,vmax:r.math_score_vs_max,pers:r.math_personality_label,fill:'fill-amber'},
-      ].forEach(s=>{
-        const accN=parseNum(s.acc)||0,pctN=parseNum(s.pct)||0;
-        const effVF=parseNum(s.effvf);
-        const effSign=effVF!==null?(effVF>=0?'<span class="green">+'+effVF+'</span>':'<span class="red">'+effVF+'</span>'):'—';
-        const card=el('div','subj-card');
-        card.innerHTML=`<h4>${s.name} &nbsp;<small style="font-family:'Share Tech Mono',monospace;font-size:.65rem;color:var(--muted)">${trendEmoji(s.tr)} ${s.tr||''}</small></h4>
-          <div class="progress-wrap"><div class="progress-label"><span>Score</span><span>${s.vmax}</span></div><div class="progress-bar"><div class="progress-fill ${s.fill}" style="width:${Math.max(0,pctN)}%"></div></div></div>
-          <div class="progress-wrap"><div class="progress-label"><span>Accuracy</span><span>${accN}%</span></div><div class="progress-bar"><div class="progress-fill ${s.fill}" style="width:${Math.max(0,accN)}%"></div></div></div>
-          <div class="subj-row"><span class="subj-row-label">Attempted</span><span class="subj-row-val">${s.att} / 25</span></div>
-          <div class="subj-row"><span class="subj-row-label">Correct</span><span class="subj-row-val green">${s.cor}</span></div>
-          <div class="subj-row"><span class="subj-row-label">Wrong</span><span class="subj-row-val red">${s.wr}</span></div>
-          <div class="subj-row"><span class="subj-row-label">Marks Lost</span><span class="subj-row-val red">-${s.lost}</span></div>
-          <div class="subj-row"><span class="subj-row-label">Efficiency</span><span class="subj-row-val amber">${s.eff} (vs fleet ${effSign})</span></div>
-          <div class="subj-row"><span class="subj-row-label">Unattempted</span><span class="subj-row-val muted">${s.un} Qs · ${s.ml} marks</span></div>
-          <div class="subj-row"><span class="subj-row-label">Career Best</span><span class="subj-row-val gold">${s.best}</span></div>
-          <div class="subj-row"><span class="subj-row-label">Career Avg</span><span class="subj-row-val">${s.avg}</span></div>
-          <div class="subj-row"><span class="subj-row-label">Personality</span><span class="subj-row-val" style="font-size:.76rem">${s.pers||'—'}</span></div>`;
+      /* ── SUBJECT CARDS ── */
+      const sg = $('#subj-grid'); sg.innerHTML = '';
+      [
+        { name:'⚛️ Physics',   color:'var(--teal)',   fill:CC.teal,   m:r.phy_marks,  pct:r.phy_score_pct,  acc:r.phy_acc,  att:r.phy_attempt,  cor:r.phy_correct,  wr:r.phy_wrong,  lost:r.phy_marks_lost,  eff:r.phy_efficiency,  effvf:r.phy_efficiency_vs_fleet,  un:r.unattempted_phy,  ml:r.marks_left_phy,  best:r.phy_best_ever,  avg:r.avg_phy_so_far,  tr:r.phy_trend,  vmax:r.phy_score_vs_max,  pers:r.phy_personality_label },
+        { name:'🧪 Chemistry', color:'var(--g1)',     fill:CC.gold,   m:r.chem_marks, pct:r.chem_score_pct, acc:r.chem_acc, att:r.chem_attempt, cor:r.chem_correct, wr:r.chem_wrong, lost:r.chem_marks_lost, eff:r.chem_efficiency, effvf:r.chem_efficiency_vs_fleet, un:r.unattempted_chem, ml:r.marks_left_chem, best:r.chem_best_ever, avg:r.avg_chem_so_far, tr:r.chem_trend, vmax:r.chem_score_vs_max, pers:r.chem_personality_label },
+        { name:'📐 Maths',     color:'var(--amber)',  fill:CC.amber,  m:r.math_marks, pct:r.math_score_pct, acc:r.math_acc, att:r.math_attempt, cor:r.math_correct, wr:r.math_wrong, lost:r.math_marks_lost, eff:r.math_efficiency, effvf:r.math_efficiency_vs_fleet, un:r.unattempted_math, ml:r.marks_left_math, best:r.math_best_ever, avg:r.avg_math_so_far, tr:r.math_trend, vmax:r.math_score_vs_max, pers:r.math_personality_label },
+      ].forEach(s => {
+        const accN = pf(s.acc)||0; const pctN = pf(s.pct)||0;
+        const evf = pf(s.effvf);
+        const evfHtml = evf !== null ? `<span class="${evf>=0?'tc-green':'tc-red'}">${evf>=0?'+':''}${evf}</span>` : '—';
+        const card = el('div', 'subj-card');
+        card.innerHTML = `
+          <div class="subj-head">
+            <span class="subj-title" style="color:${s.color}">${s.name}</span>
+            <span class="subj-trend">${trend(s.tr)} ${s.tr||''}</span>
+          </div>
+          <div class="subj-score-row">
+            <div class="subj-score-cell">
+              <div class="kc-label">Score</div>
+              <div class="subj-big" style="color:${s.color}">${s.vmax||'—'}</div>
+              ${pbHtml('',pctN,s.fill)}
+            </div>
+            <div class="subj-score-cell">
+              <div class="kc-label">Accuracy</div>
+              <div class="subj-big" style="color:${s.color}">${accN}%</div>
+              ${pbHtml('',accN,s.fill)}
+            </div>
+          </div>
+          <div class="subj-body">
+            ${srow('Attempted', s.att+' / 25')}
+            ${srow('Correct', `<span class="tc-green">${s.cor}</span>`)}
+            ${srow('Wrong',   `<span class="tc-red">${s.wr}</span>`)}
+            ${srow('Marks Lost', `<span class="tc-red">-${s.lost}</span>`)}
+            ${srow('Efficiency', `${s.eff} <span class="tc-muted">(vs fleet ${evfHtml})</span>`)}
+            ${srow('Unattempted', `${s.un} Qs · ${s.ml} left`)}
+            ${srow('Career Best', `<span class="tc-gold">${s.best}</span>`)}
+            ${srow('Career Avg', s.avg)}
+            ${srow('Personality', s.pers||'—')}
+          </div>`;
         sg.appendChild(card);
       });
 
-      // CHARTS — data
-      const labels=rows.map(x=>x.jut_id.toUpperCase().replace('JUT','J'));
-      const scores=rows.map(x=>x.absent==='1'?null:parseNum(x.score));
-      const avgArr=rows.map(x=>x.absent==='1'?null:parseNum(x.avg_score_so_far));
-      const phyA=rows.map(x=>x.absent==='1'?null:parseNum(x.phy_marks));
-      const chemA=rows.map(x=>x.absent==='1'?null:parseNum(x.chem_marks));
-      const mathA=rows.map(x=>x.absent==='1'?null:parseNum(x.math_marks));
-      const phyAccA=rows.map(x=>x.absent==='1'?null:parseNum(x.phy_acc));
-      const chemAccA=rows.map(x=>x.absent==='1'?null:parseNum(x.chem_acc));
-      const mathAccA=rows.map(x=>x.absent==='1'?null:parseNum(x.math_acc));
-      const targetLine=rows.map(()=>parseNum(r.target_score)||200);
-      const potArr=rows.map(x=>x.absent==='1'?null:parseNum(x.potential_score));
+      function pbHtml(label, val, color) {
+        return `<div class="pb-wrap"><div class="pb-track"><div class="pb-fill" style="width:${Math.max(0,val)}%;background:${color}"></div></div></div>`;
+      }
+      function srow(k, v) {
+        return `<div class="subj-row"><span class="subj-row-k">${k}</span><span class="subj-row-v">${v}</span></div>`;
+      }
 
-      destroyChart('score');
-      charts.score=new Chart(q('#score-chart'),{type:'line',
-        data:{labels,datasets:[
-          {label:'Score',data:scores,borderColor:CC.gold,backgroundColor:'rgba(240,184,64,.08)',borderWidth:2,pointBackgroundColor:CC.gold,pointRadius:isMobile()?3:5,tension:.35,fill:true,spanGaps:false},
-          {label:'Avg',data:avgArr,borderColor:CC.muted,borderDash:[5,4],borderWidth:1.5,pointRadius:0,tension:.35,fill:false,spanGaps:true},
-          {label:'Target',data:targetLine,borderColor:CC.green,borderDash:[3,3],borderWidth:1,pointRadius:0,fill:false},
-        ]},
-        options:{...chartOpts('Score Journey'),scales:scaleOpts(0,300,'Score / 300')}
+      /* ── CHARTS ── */
+      const labs   = rows.map(x => x.jut_id.toUpperCase());
+      const scores = rows.map(x => x.absent==='1' ? null : pf(x.score));
+      const avgArr = rows.map(x => x.absent==='1' ? null : pf(x.avg_score_so_far));
+      const phyA   = rows.map(x => x.absent==='1' ? null : pf(x.phy_marks));
+      const chemA  = rows.map(x => x.absent==='1' ? null : pf(x.chem_marks));
+      const mathA  = rows.map(x => x.absent==='1' ? null : pf(x.math_marks));
+      const phyAc  = rows.map(x => x.absent==='1' ? null : pf(x.phy_acc));
+      const chemAc = rows.map(x => x.absent==='1' ? null : pf(x.chem_acc));
+      const mathAc = rows.map(x => x.absent==='1' ? null : pf(x.math_acc));
+      const tgt    = rows.map(() => pf(r.target_score) || 200);
+
+      dc('score');
+      charts.score = new Chart($('#score-chart'), { type:'line', data:{ labels:labs, datasets:[
+        { label:'Score', data:scores, borderColor:CC.gold, backgroundColor:'rgba(240,192,80,.07)', borderWidth:2.5, pointBackgroundColor:CC.gold, pointRadius:5, tension:.35, fill:true, spanGaps:false },
+        { label:'Running Avg', data:avgArr, borderColor:CC.muted, borderDash:[5,4], borderWidth:1.5, pointRadius:0, tension:.35, fill:false, spanGaps:true },
+        { label:'Target', data:tgt, borderColor:CC.green, borderDash:[3,3], borderWidth:1, pointRadius:0 },
+      ]}, options: chartOpts('Score / 300', 0, 300) });
+
+      dc('subj');
+      charts.subj = new Chart($('#subj-chart'), { type:'line', data:{ labels:labs, datasets:[
+        { label:'Physics',   data:phyA,  borderColor:CC.teal,  borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:false },
+        { label:'Chemistry', data:chemA, borderColor:CC.gold,  borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:false },
+        { label:'Maths',     data:mathA, borderColor:CC.amber, borderWidth:2, pointRadius:4, tension:.35, fill:false, spanGaps:false },
+      ]}, options: chartOpts('Marks / 100', -10, 100) });
+
+      dc('acc');
+      charts.acc = new Chart($('#acc-chart'), { type:'line', data:{ labels:labs, datasets:[
+        { label:'Phy',  data:phyAc,  borderColor:CC.teal,  borderWidth:2, pointRadius:3, tension:.35, fill:false, spanGaps:false },
+        { label:'Chem', data:chemAc, borderColor:CC.gold,  borderWidth:2, pointRadius:3, tension:.35, fill:false, spanGaps:false },
+        { label:'Math', data:mathAc, borderColor:CC.amber, borderWidth:2, pointRadius:3, tension:.35, fill:false, spanGaps:false },
+      ]}, options: chartOpts('Accuracy %', 0, 100) });
+
+      function chartOpts(yTitle, yMin, yMax) {
+        return { responsive:true, plugins:{ legend:{ labels:{ color:'#706860', boxWidth:10 } } }, scales:{ x:{ grid:{ color:'#1a1a2e' }, ticks:{ color:'#706860' } }, y:{ grid:{ color:'#1a1a2e' }, ticks:{ color:'#706860' }, min:yMin, max:yMax, title:{ display:true, text:yTitle, color:'#706860' } } } };
+      }
+
+      /* ── FLEET ── */
+      const fg = $('#fleet-grid'); fg.innerHTML = '';
+      [
+        { label:'Overall Rank',  rank:r.rank,        of:r.fleet_size,         col:CC.gold },
+        { label:(r.gender||'Gender')+' Rank', rank:r.gender_rank, of:r.gender_fleet_size, col:'#d060c8' },
+        { label:'Mentor Rank',   rank:r.mentor_rank, of:r.mentor_fleet_size,  col:CC.teal },
+        { label:'Class Rank',    rank:r.class_rank,  of:r.class_fleet_size,   col:CC.amber },
+      ].forEach(f => {
+        const rk=pi(f.rank), of_=pi(f.of);
+        const pct = rk&&of_ ? Math.max(0,100-((rk-1)/of_*100)) : 0;
+        const c = el('div','fleet-card');
+        c.innerHTML = `<div class="fleet-label">${f.label}</div><div class="fleet-rank" style="color:${f.col}">#${rk||'—'}</div><div class="fleet-of">of ${of_||'—'} sailors</div><div class="fleet-bar">${hbar(pct,100,f.col,5)}</div>`;
+        fg.appendChild(c);
       });
-
-      destroyChart('subj');
-      charts.subj=new Chart(q('#subj-chart'),{type:'line',
-        data:{labels,datasets:[
-          {label:'Phy',data:phyA,borderColor:CC.teal,borderWidth:2,pointRadius:isMobile()?2:4,tension:.35,fill:false,spanGaps:false},
-          {label:'Chem',data:chemA,borderColor:CC.gold,borderWidth:2,pointRadius:isMobile()?2:4,tension:.35,fill:false,spanGaps:false},
-          {label:'Math',data:mathA,borderColor:CC.amber,borderWidth:2,pointRadius:isMobile()?2:4,tension:.35,fill:false,spanGaps:false},
-        ]},
-        options:{...chartOpts('Subject Marks'),scales:scaleOpts(-10,100)}
-      });
-
-      destroyChart('acc');
-      charts.acc=new Chart(q('#acc-chart'),{type:'line',
-        data:{labels,datasets:[
-          {label:'Phy%',data:phyAccA,borderColor:CC.teal,borderWidth:2,pointRadius:isMobile()?2:3,tension:.35,fill:false,spanGaps:false},
-          {label:'Chem%',data:chemAccA,borderColor:CC.gold,borderWidth:2,pointRadius:isMobile()?2:3,tension:.35,fill:false,spanGaps:false},
-          {label:'Math%',data:mathAccA,borderColor:CC.amber,borderWidth:2,pointRadius:isMobile()?2:3,tension:.35,fill:false,spanGaps:false},
-        ]},
-        options:{...chartOpts('Accuracy %'),scales:scaleOpts(0,100)}
-      });
-
-      // FLEET
-      const fg=q('#fleet-grid');fg.innerHTML='';
-      [{label:'Overall Rank',rank:r.rank,of:r.fleet_size,col:CC.gold},
-       {label:(r.gender||'Gender')+' Rank',rank:r.gender_rank,of:r.gender_fleet_size,col:CC.magenta},
-       {label:'Mentor Rank',rank:r.mentor_rank,of:r.mentor_fleet_size,col:CC.teal},
-       {label:'Class Rank',rank:r.class_rank,of:r.class_fleet_size,col:CC.amber},
-      ].forEach(f=>{
-        const rk=parseInt2(f.rank),of_=parseInt2(f.of);
-        const pct_=(rk&&of_)?Math.max(0,100-((rk-1)/of_*100)):0;
-        const card=el('div','fleet-card');
-        card.innerHTML=`<div class="fleet-card-title">${f.label}</div><div class="fleet-rank" style="color:${f.col}">#${rk||'—'}</div><div class="fleet-of">of ${of_||'—'} sailors</div><div class="fleet-bar">${hbar(pct_,100,f.col,6)}</div>`;
+      [
+        { label:'Gap to Topper',    val:r.gap_to_topper,  note:'marks behind #1', cls:'kc-red' },
+        { label:'vs Median',        val:(pf(r.gap_to_median)>=0?'+':'')+r.gap_to_median, note:'vs fleet median', cls:'' },
+        { label:'vs Fleet Avg',     val:(pf(r.gap_to_fleet_mean)>=0?'+':'')+r.gap_to_fleet_mean, note:'vs average', cls:'' },
+        { label:'Beats Fleet Avg',  val:r.beats_fleet_avg_flag==='1'?'✅':'❌', note:r.beats_fleet_avg_flag==='1'?'Above average':'Below average', cls:r.beats_fleet_avg_flag==='1'?'kc-green':'kc-red' },
+      ].forEach(c => {
+        const card = el('div', `kc ${c.cls}`);
+        card.innerHTML = `<div class="kc-accent"></div><div class="kc-label">${c.label}</div><div class="kc-value" style="font-size:1.2rem">${c.val||'—'}</div><div class="kc-note">${c.note}</div>`;
         fg.appendChild(card);
       });
-      [{label:'Gap to Topper',val:r.gap_to_topper,note:'marks behind #1',cls:'red'},
-       {label:'Gap to Median',val:(parseNum(r.gap_to_median)>=0?'+':'')+r.gap_to_median,note:'vs fleet median',cls:''},
-       {label:'Gap to Avg',val:(parseNum(r.gap_to_fleet_mean)>=0?'+':'')+r.gap_to_fleet_mean,note:'vs fleet average',cls:''},
-       {label:'Beats Fleet Avg',val:r.beats_fleet_avg_flag==='1'?'✅ YES':'❌ NO',note:'above average',cls:r.beats_fleet_avg_flag==='1'?'green':'red'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value" style="font-size:1.1rem">${c.val||'—'}</div><div class="card-note">${c.note}</div>`;
-        fg.appendChild(card);
+
+      /* ── NM DAMAGE ── */
+      const dc_ = $('#damage-cards'); dc_.innerHTML = '';
+      [
+        { label:'Total Wrong',    val:r.total_wrong,  note:`-${r.marks_lost} marks total`, cls:'kc-red' },
+        { label:'Gross Score',    val:r.gross_score,  note:'if no negatives', cls:'' },
+        { label:'Damage %',       val:`${pf(r.damage_pct)||0}%`, note:r.nm_severity, cls:(pf(r.damage_pct)||0)>=20?'kc-red':(pf(r.damage_pct)||0)>=10?'kc-amber':'kc-green' },
+        { label:'Physics Wrong',  val:r.phy_wrong,    note:`-${r.phy_marks_lost} marks`, cls:'' },
+        { label:'Chem Wrong',     val:r.chem_wrong,   note:`-${r.chem_marks_lost} marks`, cls:'' },
+        { label:'Maths Wrong',    val:r.math_wrong,   note:`-${r.math_marks_lost} marks`, cls:'' },
+        { label:'If Zero Wrong',  val:r.projected_score_if_zero_wrong, note:`+${r.marks_saved_if_zero_wrong} saved`, cls:'kc-teal' },
+        { label:'Skip Discipline',val:r.skip_discipline_verdict?.split('—')[0]?.trim()||'—', note:r.skip_discipline_verdict, cls:'' },
+      ].forEach(c => {
+        const card = el('div', `kc ${c.cls}`);
+        card.innerHTML = `<div class="kc-accent"></div><div class="kc-label">${c.label}</div><div class="kc-value" style="font-size:${String(c.val).length>4?'1.1rem':'1.75rem'}">${c.val||0}</div><div class="kc-note">${c.note||''}</div>`;
+        dc_.appendChild(card);
       });
 
-      // NM DAMAGE
-      const dc=q('#damage-cards');dc.innerHTML='';
-      [{label:'Total Wrong',val:r.total_wrong,note:`-${r.marks_lost} marks`,cls:'red'},
-       {label:'Gross Score',val:r.gross_score,note:'if no negatives',cls:''},
-       {label:'Damage %',val:`${parseNum(r.damage_pct)||0}%`,note:r.nm_severity,cls:(parseNum(r.damage_pct)||0)>=20?'red':(parseNum(r.damage_pct)||0)>=10?'amber':'green'},
-       {label:'Phy Wrong',val:r.phy_wrong,note:`-${r.phy_marks_lost} marks`,cls:''},
-       {label:'Chem Wrong',val:r.chem_wrong,note:`-${r.chem_marks_lost} marks`,cls:''},
-       {label:'Math Wrong',val:r.math_wrong,note:`-${r.math_marks_lost} marks`,cls:''},
-       {label:'Skip Discipline',val:r.skip_discipline_verdict?.split('—')[0]?.trim()||'—',note:r.skip_discipline_verdict,cls:''},
-       {label:'If Zero Wrong',val:r.projected_score_if_zero_wrong,note:`+${r.marks_saved_if_zero_wrong} saved`,cls:'teal'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value" style="font-size:${c.val&&String(c.val).length>4?'1rem':'1.6rem'}">${c.val||0}</div><div class="card-note">${c.note||''}</div>`;
-        dc.appendChild(card);
+      dc('nm');
+      charts.nm = new Chart($('#nm-chart'), { type:'bar', data:{ labels:['Physics','Chemistry','Maths'], datasets:[
+        { label:'Correct', data:[pf(r.phy_correct)||0,pf(r.chem_correct)||0,pf(r.math_correct)||0], backgroundColor:'rgba(40,216,128,.5)', borderColor:CC.green, borderWidth:1 },
+        { label:'Wrong',   data:[pf(r.phy_wrong)||0,pf(r.chem_wrong)||0,pf(r.math_wrong)||0],   backgroundColor:'rgba(224,48,80,.5)',   borderColor:CC.crimson, borderWidth:1 },
+        { label:'Skipped', data:[pf(r.unattempted_phy)||0,pf(r.unattempted_chem)||0,pf(r.unattempted_math)||0], backgroundColor:'rgba(37,37,64,.8)', borderColor:'#32325a', borderWidth:1 },
+      ]}, options:{ responsive:true, plugins:{ legend:{ labels:{ color:'#706860', boxWidth:10 } } }, scales:{ x:{ stacked:true, grid:{ color:'#1a1a2e' }, ticks:{ color:'#706860' } }, y:{ stacked:true, grid:{ color:'#1a1a2e' }, ticks:{ color:'#706860' }, max:25 } } } });
+
+      dc('eff');
+      charts.eff = new Chart($('#eff-chart'), { type:'bar', data:{ labels:['Physics','Chemistry','Maths'], datasets:[
+        { label:'Eff vs Fleet', data:[pf(r.phy_efficiency_vs_fleet)||0,pf(r.chem_efficiency_vs_fleet)||0,pf(r.math_efficiency_vs_fleet)||0], backgroundColor:[`rgba(61,214,200,.5)`,`rgba(240,192,80,.5)`,`rgba(240,160,32,.5)`], borderColor:[CC.teal,CC.gold,CC.amber], borderWidth:1 },
+      ]}, options:{ responsive:true, plugins:{ legend:{ labels:{ color:'#706860', boxWidth:10 } } }, scales:{ x:{ grid:{ color:'#1a1a2e' }, ticks:{ color:'#706860' } }, y:{ grid:{ color:'#1a1a2e' }, ticks:{ color:'#706860' } } } } });
+
+      /* ── PROJECTIONS ── */
+      const pg = $('#proj-grid'); pg.innerHTML = '';
+      [
+        { scenario:'If Accuracy +10%',  score:r.proj_if_10pct_better_accuracy, gain:r.gain_if_10pct_better_accuracy, desc:'Improve worst subject accuracy by 10pp' },
+        { scenario:'If 5 More Math Qs', score:r.proj_if_5_more_math,           gain:r.gain_if_5_more_math,           desc:'Attempt 5 more Maths at current accuracy' },
+        { scenario:'If Zero Wrong',      score:r.proj_if_zero_wrong,            gain:r.gain_if_zero_wrong,            desc:'Skip uncertain instead of guessing' },
+        { scenario:'If Full Attempt',    score:r.proj_if_full_attempt,          gain:r.gain_if_full_attempt,          desc:'Attempt all 75 at current accuracy' },
+      ].forEach(p => {
+        const c = el('div','proj-card');
+        c.innerHTML = `<div class="proj-scenario">${p.scenario}</div><div class="proj-score">${p.score||'—'}</div><div class="proj-gain">+${p.gain||0} marks</div><div class="proj-desc">${p.desc}</div>`;
+        pg.appendChild(c);
       });
 
-      destroyChart('nm');
-      charts.nm=new Chart(q('#nm-chart'),{type:'bar',
-        data:{labels:['Physics','Chemistry','Maths'],datasets:[
-          {label:'Correct',data:[parseNum(r.phy_correct)||0,parseNum(r.chem_correct)||0,parseNum(r.math_correct)||0],backgroundColor:'rgba(46,204,113,.6)',borderColor:CC.green,borderWidth:1},
-          {label:'Wrong',data:[parseNum(r.phy_wrong)||0,parseNum(r.chem_wrong)||0,parseNum(r.math_wrong)||0],backgroundColor:'rgba(192,57,43,.6)',borderColor:CC.red,borderWidth:1},
-          {label:'Skipped',data:[parseNum(r.unattempted_phy)||0,parseNum(r.unattempted_chem)||0,parseNum(r.unattempted_math)||0],backgroundColor:'rgba(61,50,37,.6)',borderColor:'#3d3225',borderWidth:1},
-        ]},
-        options:{...chartOpts('Attempt Breakdown'),scales:{
-          x:{stacked:true,grid:{color:'#2a2218'},ticks:{color:'#7a6a50',font:{size:isMobile()?8:10}}},
-          y:{stacked:true,grid:{color:'#2a2218'},ticks:{color:'#7a6a50',font:{size:isMobile()?8:10}},max:25}
-        }}
+      const hcEl = $('#headroom-cards'); hcEl.innerHTML = '';
+      [
+        { label:'From Wrong Answers',    val:r.headroom_from_wrong_answers,   note:'stop guessing wrong', cls:'kc-red' },
+        { label:'From More Attempts',    val:r.headroom_from_more_attempts,   note:'at current accuracy', cls:'kc-amber' },
+        { label:'From Accuracy Gap',     val:r.headroom_from_accuracy_gap,    note:'match fleet accuracy', cls:'kc-teal' },
+        { label:'Total Headroom',        val:r.total_improvement_headroom,    note:r.headroom_label, cls:'kc-green' },
+      ].forEach(c => {
+        const card = el('div', `kc ${c.cls}`);
+        card.innerHTML = `<div class="kc-accent"></div><div class="kc-label">${c.label}</div><div class="kc-value">${c.val||0}</div><div class="kc-note">${c.note}</div>`;
+        hcEl.appendChild(card);
       });
 
-      destroyChart('eff');
-      charts.eff=new Chart(q('#eff-chart'),{type:'bar',
-        data:{labels:['Physics','Chemistry','Maths'],datasets:[
-          {label:'Eff vs Fleet',data:[parseNum(r.phy_efficiency_vs_fleet)||0,parseNum(r.chem_efficiency_vs_fleet)||0,parseNum(r.math_efficiency_vs_fleet)||0],backgroundColor:['rgba(92,184,178,.6)','rgba(240,184,64,.6)','rgba(232,160,32,.6)'],borderColor:[CC.teal,CC.gold,CC.amber],borderWidth:1},
-        ]},
-        options:{...chartOpts('Efficiency vs Fleet'),scales:{
-          x:{grid:{color:'#2a2218'},ticks:{color:'#7a6a50',font:{size:isMobile()?8:10}}},
-          y:{grid:{color:'#2a2218'},ticks:{color:'#7a6a50',font:{size:isMobile()?8:10}}}
-        }}
+      const scEl = $('#skip-cards'); scEl.innerHTML = '';
+      [
+        { label:'Wrong Rate', val:`${Math.round((pf(r.wrong_rate)||0)*100)}%`, note:'of attempted were wrong', cls:(pf(r.wrong_rate)||0)>0.3?'kc-red':(pf(r.wrong_rate)||0)>0.2?'kc-amber':'kc-green' },
+        { label:'Skip Verdict', val:r.skip_discipline_verdict?.split('—')[0]?.trim()||'—', note:r.skip_discipline_verdict, cls:'' },
+        { label:'Best Action', val:'💡', note:r.improvement_tip, cls:'kc-teal' },
+      ].forEach(c => {
+        const card = el('div', `kc ${c.cls}`);
+        card.innerHTML = `<div class="kc-accent"></div><div class="kc-label">${c.label}</div><div class="kc-value" style="font-size:1.1rem">${c.val||'—'}</div><div class="kc-note">${c.note||''}</div>`;
+        scEl.appendChild(card);
       });
 
-      // PROJECTIONS
-      const pg=q('#proj-grid');pg.innerHTML='';
-      [{scenario:'Accuracy +10%',score:r.proj_if_10pct_better_accuracy,gain:r.gain_if_10pct_better_accuracy,desc:'Improve worst subject accuracy by 10%'},
-       {scenario:'5 More Math Qs',score:r.proj_if_5_more_math,gain:r.gain_if_5_more_math,desc:'Attempt 5 more Maths at current accuracy'},
-       {scenario:'Zero Wrong',score:r.proj_if_zero_wrong,gain:r.gain_if_zero_wrong,desc:'Skip uncertain instead of guessing'},
-       {scenario:'Full Attempt',score:r.proj_if_full_attempt,gain:r.gain_if_full_attempt,desc:'Attempt all 75 at current accuracy'},
-      ].forEach(p=>{
-        const card=el('div','proj-card');
-        card.innerHTML=`<div class="proj-scenario">${p.scenario}</div><div class="proj-score">${p.score||'—'}</div><div class="proj-gain">+${p.gain||0} marks</div><div class="proj-desc">${p.desc}</div>`;
-        pg.appendChild(card);
+      /* ── MOMENTUM ── */
+      const mp = $('#momentum-panel');
+      mp.innerHTML = `
+        <div class="mom-score">${pf(r.momentum_score)?.toFixed(0)||'—'}</div>
+        <div class="mom-divider"></div>
+        <div class="mom-info">
+          <div class="mom-label">${r.momentum_label||'—'}</div>
+          <div class="mom-sub">Weighted avg of last 3 exams &nbsp;·&nbsp; Velocity: ${r.velocity_label||'—'} (${r.learning_velocity>0?'+':''}${r.learning_velocity||0} marks/exam)</div>
+          <div class="mom-sub">Rank stability: ${r.rank_stability_label||'—'} &nbsp;·&nbsp; Score CV: ${r.score_cv||0}%</div>
+        </div>`;
+
+      const sr = $('#streak-row'); sr.innerHTML = '';
+      [
+        { num:r.streak_improving, label:'Improving Streak', col:CC.green },
+        { num:r.streak_declining, label:'Declining Streak', col:CC.crimson },
+        { num:r.exams_appeared,   label:'Exams Sailed',     col:CC.gold },
+        { num:r.exams_absent,     label:'Times Absent',     col:CC.muted },
+      ].forEach(s => {
+        const c = el('div','streak-card');
+        c.innerHTML = `<div class="streak-num" style="color:${s.col}">${s.num||0}</div><div class="streak-label">${s.label}</div>`;
+        sr.appendChild(c);
       });
 
-      const hc=q('#headroom-cards');hc.innerHTML='';
-      [{label:'From Wrong Answers',val:r.headroom_from_wrong_answers,note:'stop guessing wrong',cls:'red'},
-       {label:'From More Attempts',val:r.headroom_from_more_attempts,note:'attempt unattempted',cls:'amber'},
-       {label:'From Accuracy Gap',val:r.headroom_from_accuracy_gap,note:'match fleet accuracy',cls:'teal'},
-       {label:'Total Headroom',val:r.total_improvement_headroom,note:r.headroom_label,cls:'green'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value">${c.val||0}</div><div class="card-note">${c.note}</div>`;
-        hc.appendChild(card);
-      });
-
-      const sc_=q('#skip-cards');sc_.innerHTML='';
-      [{label:'Wrong Rate',val:`${Math.round((parseNum(r.wrong_rate)||0)*100)}%`,note:'of attempts were wrong',cls:(parseNum(r.wrong_rate)||0)>0.3?'red':(parseNum(r.wrong_rate)||0)>0.2?'amber':'green'},
-       {label:'Skip Discipline',val:r.skip_discipline_verdict?.split('—')[0]?.trim()||'—',note:r.skip_discipline_verdict,cls:''},
-       {label:'Best Action',val:'💡',note:r.improvement_tip,cls:'teal'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value" style="font-size:1rem">${c.val||'—'}</div><div class="card-note">${c.note||''}</div>`;
-        sc_.appendChild(card);
-      });
-
-      // MOMENTUM
-      const mc=q('#momentum-card');
-      mc.innerHTML=`<div class="momentum-score">${parseNum(r.momentum_score)?.toFixed(0)||'—'}</div><div class="momentum-info"><div class="momentum-label">${r.momentum_label||'—'}</div><div class="momentum-sub">Weighted avg last 3 · Velocity: ${r.velocity_label||'—'} (${r.learning_velocity>0?'+':''}${r.learning_velocity||0}/exam)</div><div class="momentum-sub" style="margin-top:4px">Rank stability: ${r.rank_stability_label||'—'} · Score CV: ${r.score_cv||0}%</div></div>`;
-
-      const sw_=q('#streak-wrap');sw_.innerHTML='';
-      [{num:r.streak_improving,label:'Improving',col:'var(--green)'},
-       {num:r.streak_declining,label:'Declining',col:'var(--red)'},
-       {num:r.exams_appeared,label:'Exams Sailed',col:'var(--gold)'},
-       {num:r.exams_absent,label:'Absent',col:'var(--muted)'},
-      ].forEach(s=>{
-        const c=el('div','streak-card');
-        c.innerHTML=`<div class="streak-num" style="color:${s.col}">${s.num||0}</div><div class="streak-label">${s.label}</div>`;
-        sw_.appendChild(c);
-      });
-
-      const ppg=q('#personality-grid');ppg.innerHTML='';
-      [{subj:'⚛️ Physics',label:r.phy_personality_label,pers:r.phy_personality},
-       {subj:'🧪 Chemistry',label:r.chem_personality_label,pers:r.chem_personality},
-       {subj:'📐 Maths',label:r.math_personality_label,pers:r.math_personality},
-      ].forEach(p=>{
-        const c=el('div','personality-card');
-        c.innerHTML=`<div class="personality-subj">${p.subj}</div><div class="personality-label">${p.label||'—'}</div><div style="font-family:'Share Tech Mono',monospace;font-size:.6rem;color:var(--muted);margin-top:5px">${p.pers||''}</div>`;
+      const ppg = $('#personality-grid'); ppg.innerHTML = '';
+      [
+        { subj:'⚛️ Physics',   label:r.phy_personality_label,  code:r.phy_personality },
+        { subj:'🧪 Chemistry', label:r.chem_personality_label, code:r.chem_personality },
+        { subj:'📐 Maths',     label:r.math_personality_label, code:r.math_personality },
+      ].forEach(p => {
+        const c = el('div','pers-card');
+        c.innerHTML = `<div class="pers-subj">${p.subj}</div><div class="pers-label">${p.label||'—'}</div><div class="pers-code">${p.code||''}</div>`;
         ppg.appendChild(c);
       });
 
-      // CAREER
-      const cb=q('#career-bests');cb.innerHTML='';
-      [{label:'Best Score',val:r.best_score_ever,jut:r.best_score_jut},
-       {label:'Worst Score',val:r.worst_score_ever,jut:r.worst_score_jut},
-       {label:'Best Rank',val:`#${r.best_rank_ever}`,jut:r.best_rank_jut},
-       {label:'Worst Rank',val:`#${r.worst_rank_ever}`,jut:r.worst_rank_jut},
-       {label:'Avg Score',val:r.avg_score_so_far,jut:`${r.exams_appeared} exams`},
-       {label:'Median Score',val:r.median_score_so_far,jut:'career median'},
-       {label:'Consistency σ',val:r.score_stdev_across_juts,jut:r.consistency_rating},
-       {label:'Phy Best',val:r.phy_best_ever,jut:r.phy_best_jut},
-       {label:'Chem Best',val:r.chem_best_ever,jut:r.chem_best_jut},
-       {label:'Math Best',val:r.math_best_ever,jut:r.math_best_jut},
-      ].forEach(b=>{
-        const c=el('div','best-card');
-        c.innerHTML=`<div class="best-label">${b.label}</div><div class="best-val">${b.val||'—'}</div><div class="best-jut">${b.jut||''}</div>`;
+      /* ── CAREER ── */
+      const cb = $('#career-bests'); cb.innerHTML = '';
+      [
+        { label:'Best Score',     val:r.best_score_ever,   jut:r.best_score_jut },
+        { label:'Worst Score',    val:r.worst_score_ever,  jut:r.worst_score_jut },
+        { label:'Best Rank',      val:`#${r.best_rank_ever}`, jut:r.best_rank_jut },
+        { label:'Worst Rank',     val:`#${r.worst_rank_ever}`, jut:r.worst_rank_jut },
+        { label:'Career Avg',     val:r.avg_score_so_far,  jut:`${r.exams_appeared} exams` },
+        { label:'Median',         val:r.median_score_so_far, jut:'career median' },
+        { label:'Consistency σ',  val:r.score_stdev_across_juts, jut:r.consistency_rating },
+        { label:'Physics Best',   val:r.phy_best_ever,     jut:r.phy_best_jut },
+        { label:'Chemistry Best', val:r.chem_best_ever,    jut:r.chem_best_jut },
+        { label:'Maths Best',     val:r.math_best_ever,    jut:r.math_best_jut },
+      ].forEach(b => {
+        const c = el('div','best-card');
+        c.innerHTML = `<div class="best-label">${b.label}</div><div class="best-val">${b.val||'—'}</div><div class="best-jut">${b.jut||''}</div>`;
         cb.appendChild(c);
       });
 
-      const tbody=q('#history-tbody');tbody.innerHTML='';
-      rows.forEach(hr=>{
-        const absent=hr.absent==='1';
-        const tr=el('tr');
-        tr.innerHTML=`
-          <td class="gold">${hr.jut_id?.toUpperCase()}</td>
-          <td>${absent?'<span class="badge badge-red">ABS</span>':'<span class="badge badge-green">✓</span>'}</td>
-          <td><span class="rank-badge">${absent?'—':hr.exam_grade||'—'}</span></td>
-          <td class="num gold">${absent?'—':hr.score}</td>
+      const tbody = $('#history-tbody'); tbody.innerHTML = '';
+      rows.forEach(hr => {
+        const absent = hr.absent === '1';
+        const tr = el('tr');
+        const sp = pf(hr.score_vs_prev);
+        tr.innerHTML = `
+          <td class="tc-gold">${hr.jut_id?.toUpperCase()}</td>
+          <td>${absent ? `<span class="badge b-red">ABSENT</span>` : `<span class="badge b-green">PRESENT</span>`}</td>
+          <td>${absent ? '—' : `<span class="rank-badge">${hr.exam_grade||'—'}</span>`}</td>
+          <td class="num tc-gold">${absent?'—':hr.score}</td>
           <td class="num"><span class="rank-badge">${absent?'—':'#'+hr.rank}</span></td>
-          <td class="num teal">${absent?'—':(hr.top_x_pct||'—')}</td>
-          <td class="num teal">${absent?'—':hr.phy_marks}</td>
-          <td class="num gold">${absent?'—':hr.chem_marks}</td>
-          <td class="num amber">${absent?'—':hr.math_marks}</td>
-          <td class="num">${absent?'—':(parseNum(hr.overall_acc)||0)+'%'}</td>
-          <td class="num red">${absent?'—':hr.total_wrong}</td>
-          <td>${absent?'—':trendEmoji(hr.score_trend)+' '+(hr.score_vs_prev!==''?(parseFloat(hr.score_vs_prev)>0?'<span class="green">+':'<span class="red">')+hr.score_vs_prev+'</span>':'DEBUT')}</td>
-          <td style="font-size:.72rem">${absent?'—':(hr.archetype_icon||'')+' '+(hr.archetype_name||'')}</td>`;
+          <td class="num tc-violet">${absent?'—':(hr.top_x_pct||'—')}</td>
+          <td class="num tc-teal">${absent?'—':hr.phy_marks}</td>
+          <td class="num tc-gold">${absent?'—':hr.chem_marks}</td>
+          <td class="num tc-amber">${absent?'—':hr.math_marks}</td>
+          <td class="num">${absent?'—':(pf(hr.overall_acc)||0)+'%'}</td>
+          <td class="num tc-red">${absent?'—':hr.total_wrong}</td>
+          <td>${absent?'—':trend(hr.score_trend)+' '+(sp!==null&&sp!==0?`<span class="${sp>0?'tc-green':'tc-red'}">${sp>0?'+':''}${sp}</span>`:'DEBUT')}</td>
+          <td style="font-size:.78rem">${absent?'—':(hr.archetype_icon||'')+' '+(hr.archetype_name||'')}</td>`;
         tbody.appendChild(tr);
       });
 
-      // DEEP ANALYSIS — Subject Correlation
-      const cg=q('#corr-grid');cg.innerHTML='';
-      [{pair:'⚛️ Phy & 🧪 Chem',val:r.phy_chem_corr,label:r.phy_chem_corr_label},
-       {pair:'⚛️ Phy & 📐 Math',val:r.phy_math_corr,label:r.phy_math_corr_label},
-       {pair:'🧪 Chem & 📐 Math',val:r.chem_math_corr,label:r.chem_math_corr_label},
-      ].forEach(c=>{
-        const corrN=parseNum(c.val);
-        const col=corrColor(c.label);
-        const barW=corrN!==null?Math.abs(corrN)*100:0;
-        const barColor=col==='corr-pos'?CC.green:col==='corr-neg'?CC.red:CC.muted;
-        const card=el('div','analysis-card');
-        card.innerHTML=`<h4>${c.pair}</h4>
-          <div class="analysis-row"><span class="analysis-label">Pearson r</span><span class="analysis-val ${col}" style="font-family:'Uncial Antiqua',serif;font-size:1.3rem">${corrN!==null?corrN.toFixed(3):'—'}</span></div>
-          <div class="analysis-row"><span class="analysis-label">Relationship</span><span class="analysis-val ${col}">${c.label||'—'}</span></div>
-          <div style="margin-top:8px">${hbar(barW,100,barColor,7)}</div>
-          <div style="font-style:italic;color:var(--muted);font-size:.72rem;margin-top:7px">${corrN===null?'Need 3+ exams':corrN>=0.4?'Rise and fall together':corrN<=-0.4?'One up, other down':'Largely independent'}</div>`;
-        cg.appendChild(card);
-      });
-
-      // Score Decomposition
-      const dc2=q('#decomp-cards');dc2.innerHTML='';
-      const phyP=parseNum(r.marks_from_phy_pct)||0;
-      const chemP=parseNum(r.marks_from_chem_pct)||0;
-      const mathP=parseNum(r.marks_from_math_pct)||0;
-      [{label:'Physics',val:`${phyP}%`,note:`${r.phy_marks} marks`,cls:'teal'},
-       {label:'Chemistry',val:`${chemP}%`,note:`${r.chem_marks} marks`,cls:''},
-       {label:'Maths',val:`${mathP}%`,note:`${r.math_marks} marks`,cls:'amber'},
-       {label:'Biggest',val:r.most_contributing_subject||'—',note:r.subject_contribution_line,cls:'green'},
-       {label:'Weakest',val:r.least_contributing_subject||'—',note:'focus area',cls:'red'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value" style="font-size:1.3rem">${c.val||'—'}</div><div class="card-note">${c.note||''}</div>`;
-        dc2.appendChild(card);
-      });
-      destroyChart('decomp');
-      charts.decomp=new Chart(q('#decomp-chart'),{type:'doughnut',
-        data:{labels:['Physics','Chemistry','Maths'],datasets:[{data:[phyP,chemP,mathP],backgroundColor:['rgba(92,184,178,.7)','rgba(240,184,64,.7)','rgba(232,160,32,.7)'],borderColor:[CC.teal,CC.gold,CC.amber],borderWidth:2}]},
-        options:{...chartOpts('Score Contribution')}
-      });
-
-      // Potential vs Actual
-      const pc=q('#potential-cards');pc.innerHTML='';
-      const realRate=parseNum(r.realisation_rate)||0;
-      [{label:'Avg Potential',val:r.avg_potential_so_far,note:'if all Qs attempted',cls:'teal'},
-       {label:'Avg Actual',val:r.avg_actual_so_far,note:'career avg score',cls:''},
-       {label:'Avg Gap',val:r.avg_gap_potential_actual,note:'marks left per exam',cls:'amber'},
-       {label:'Realisation',val:`${realRate}%`,note:r.realisation_rate_label,cls:realRate>=70?'green':realRate>=50?'amber':'red'},
-       {label:'Best JUT',val:'',note:r.best_realisation_jut?`Lowest gap: ${r.best_realisation_jut}`:'—',cls:'green'},
-       {label:'Worst JUT',val:'',note:r.worst_realisation_jut?`Biggest gap: ${r.worst_realisation_jut}`:'—',cls:'red'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value" style="font-size:1.3rem">${c.val||'—'}</div><div class="card-note">${c.note||''}</div>`;
-        pc.appendChild(card);
-      });
-      destroyChart('potential');
-      charts.potential=new Chart(q('#potential-chart'),{type:'line',
-        data:{labels,datasets:[
-          {label:'Potential',data:potArr,borderColor:CC.teal,backgroundColor:'rgba(92,184,178,.08)',borderDash:[4,3],borderWidth:1.5,pointRadius:isMobile()?2:3,tension:.35,fill:true,spanGaps:false},
-          {label:'Actual',data:scores,borderColor:CC.gold,backgroundColor:'rgba(240,184,64,.08)',borderWidth:2,pointRadius:isMobile()?3:5,tension:.35,fill:true,spanGaps:false},
-        ]},
-        options:{...chartOpts('Potential vs Actual'),scales:scaleOpts(0,300)}
-      });
-
-      // Consistency Deep Dive
-      const consg=q('#consistency-grid');consg.innerHTML='';
-      [{subj:'⚛️ Physics',sd:r.phy_marks_stdev,label:r.phy_consistency_label,ceil:r.phy_accuracy_ceiling,floor:r.phy_accuracy_floor,range:r.phy_accuracy_range,col:CC.teal},
-       {subj:'🧪 Chemistry',sd:r.chem_marks_stdev,label:r.chem_consistency_label,ceil:r.chem_accuracy_ceiling,floor:r.chem_accuracy_floor,range:r.chem_accuracy_range,col:CC.gold},
-       {subj:'📐 Maths',sd:r.math_marks_stdev,label:r.math_consistency_label,ceil:r.math_accuracy_ceiling,floor:r.math_accuracy_floor,range:r.math_accuracy_range,col:CC.amber},
-      ].forEach(s=>{
-        const card=el('div','analysis-card');
-        card.innerHTML=`<h4>${s.subj}</h4>
-          <div class="analysis-row"><span class="analysis-label">Marks σ</span><span class="analysis-val" style="color:${s.col}">${s.sd||'—'}</span></div>
-          <div class="analysis-row"><span class="analysis-label">Consistency</span><span class="analysis-val">${s.label||'—'}</span></div>
-          <div class="analysis-row"><span class="analysis-label">Acc Ceiling</span><span class="analysis-val green">${s.ceil||'—'}%</span></div>
-          <div class="analysis-row"><span class="analysis-label">Acc Floor</span><span class="analysis-val red">${s.floor||'—'}%</span></div>
-          <div class="analysis-row"><span class="analysis-label">Acc Swing</span><span class="analysis-val amber">${s.range||'—'}%</span></div>
-          <div style="margin-top:8px">${hbar(parseNum(s.ceil)||0,100,s.col,6)}</div>`;
-        consg.appendChild(card);
-      });
-      if(r.best_all_round_jut||r.worst_all_round_jut){
-        const card=el('div','analysis-card');
-        card.innerHTML=`<h4>🏆 All-Round</h4>
-          ${r.best_all_round_jut?`<div class="analysis-row"><span class="analysis-label">Best JUT</span><span class="analysis-val green">${r.best_all_round_jut.toUpperCase()}</span></div>`:''}
-          ${r.worst_all_round_jut?`<div class="analysis-row"><span class="analysis-label">Worst JUT</span><span class="analysis-val red">${r.worst_all_round_jut.toUpperCase()}</span></div>`:''}
-          <div class="analysis-row"><span class="analysis-label">Most Consistent</span><span class="analysis-val green">${r.most_consistent_subject||'—'}</span></div>
-          <div class="analysis-row"><span class="analysis-label">Least Consistent</span><span class="analysis-val red">${r.least_consistent_subject||'—'}</span></div>`;
-        consg.appendChild(card);
-      }
-
-      // Recovery
-      const rb=q('#recovery-banner');
-      const bounceBack=r.bounce_back_flag==='1';
-      const recoveryGain=parseNum(r.recovery_score_gain);
-      if(bounceBack&&recoveryGain>0){
-        rb.innerHTML=`<div class="recovery-banner">🔄 <strong style="color:var(--green)">Bounce Back!</strong> — recovered <strong style="color:var(--green)">+${recoveryGain} marks</strong>. ${r.recovery_speed_label||''}</div>`;
-      } else if(parseInt2(r.times_declined)>0){
-        rb.innerHTML=`<div class="recovery-banner bad">📉 <strong style="color:var(--red)">Recovery Needed</strong> — ${r.recovery_speed_label||'—'}</div>`;
-      } else {
-        rb.innerHTML=`<div class="recovery-banner">✅ <strong style="color:var(--green)">No recovery needed</strong> — steady sailing.</div>`;
-      }
-      const rc=q('#recovery-cards');rc.innerHTML='';
-      [{label:'Times Declined',val:r.times_declined,note:'score drops',cls:parseInt2(r.times_declined)>2?'red':''},
-       {label:'Times Recovered',val:r.times_recovered,note:'bounced back',cls:parseInt2(r.times_recovered)>0?'green':''},
-       {label:'Avg After Decline',val:r.avg_score_after_decline||'—',note:'mean gain after bad exam',cls:'teal'},
-       {label:'Recovery Speed',val:r.recovery_speed_label?.split('—')[0]?.trim()||'—',note:r.recovery_speed_label,cls:''},
-       {label:'Longest Decline',val:r.longest_decline_streak,note:'consecutive drops',cls:parseInt2(r.longest_decline_streak)>=3?'red':''},
-       {label:'Longest Recovery',val:r.longest_recovery_streak,note:'consecutive gains',cls:parseInt2(r.longest_recovery_streak)>=2?'green':''},
-       {label:'Post-Best Drop',val:r.post_best_drop||'—',note:'after personal best',cls:parseNum(r.post_best_drop)<0?'red':'teal'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value" style="font-size:1.2rem">${c.val||'—'}</div><div class="card-note">${c.note||''}</div>`;
-        rc.appendChild(card);
-      });
-
-      // TARGET
-      const hitTarget=r.target_verdict?.startsWith('✅');
-      q('#target-card').className='target-card'+(hitTarget?'':' miss');
-      q('#target-verdict').textContent=r.target_verdict||'—';
-      q('#target-sub').textContent=`Target: ${r.target_score} · Hit ${r.times_hit_target_so_far}x · Closest: ${r.closest_to_target_ever} (${r.closest_to_target_jut||'—'})`;
-      const tcc=q('#target-cards');tcc.innerHTML='';
-      [{label:'Target Score',val:r.target_score,note:'yer goal',cls:''},
-       {label:'Marks to Target',val:r.marks_to_target,note:parseInt2(r.marks_to_target)<=0?'✅ Achieved!':'to go',cls:parseInt2(r.marks_to_target)<=0?'green':'amber'},
-       {label:'Times Hit',val:r.times_hit_target_so_far,note:`of ${r.exams_appeared} exams`,cls:parseInt2(r.times_hit_target_so_far)>0?'green':'red'},
-       {label:'Closest Ever',val:r.closest_to_target_ever,note:r.closest_to_target_jut||'—',cls:'teal'},
-      ].forEach(c=>{
-        const card=el('div',`card ${c.cls}`);
-        card.innerHTML=`<div class="card-label">${c.label}</div><div class="card-value">${c.val||'—'}</div><div class="card-note">${c.note}</div>`;
+      /* ── TARGET ── */
+      const hit = r.target_verdict?.startsWith('✅');
+      $('#target-verdict-wrap').innerHTML = `
+        <div class="target-verdict-card${hit?'':' miss'}">
+          <div class="target-v">${r.target_verdict||'—'}</div>
+          <div class="target-sub">Target: ${r.target_score} marks &nbsp;·&nbsp; ${r.times_hit_target_so_far} times hit &nbsp;·&nbsp; Closest: ${r.closest_to_target_ever} (${r.closest_to_target_jut||'—'})</div>
+        </div>`;
+      const tcc = $('#target-cards'); tcc.innerHTML = '';
+      [
+        { label:'Target Score',  val:r.target_score, note:'yer personal goal', cls:'' },
+        { label:'Marks to Go',   val:r.marks_to_target, note:pi(r.marks_to_target)<=0?'✅ Achieved':'remaining', cls:pi(r.marks_to_target)<=0?'kc-green':'kc-amber' },
+        { label:'Times Hit',     val:r.times_hit_target_so_far, note:`of ${r.exams_appeared} exams`, cls:pi(r.times_hit_target_so_far)>0?'kc-green':'kc-red' },
+        { label:'Closest Ever',  val:r.closest_to_target_ever, note:r.closest_to_target_jut||'—', cls:'kc-teal' },
+      ].forEach(c => {
+        const card = el('div', `kc ${c.cls}`);
+        card.innerHTML = `<div class="kc-accent"></div><div class="kc-label">${c.label}</div><div class="kc-value">${c.val||'—'}</div><div class="kc-note">${c.note}</div>`;
         tcc.appendChild(card);
       });
 
-      // BOARD vs JUT
-      const bvj=q('#bvj-grid');bvj.innerHTML='';
-      [{title:'⚛️ Physics / Science',rows:[['Board Science Marks',r.board_science_marks||'—'],['Board Science %',r.board_science_pct?r.board_science_pct+'%':'—'],['JUT Physics Acc',(parseNum(r.phy_acc)||0)+'%'],['Verdict',r.science_board_vs_jut||'—']]},
-       {title:'📐 Maths',rows:[['Board Maths Marks',r.board_math_marks||'—'],['Board Maths %',r.board_math_pct?r.board_math_pct+'%':'—'],['JUT Maths Acc',(parseNum(r.math_acc)||0)+'%'],['Verdict',r.math_board_vs_jut||'—']]},
-      ].forEach(b=>{
-        const card=el('div','bvj-card');
-        card.innerHTML=`<div class="bvj-title">${b.title}</div>`+b.rows.map(([l,v])=>`<div class="bvj-row"><span>${l}</span><span class="gold">${v}</span></div>`).join('');
-        bvj.appendChild(card);
+      /* ── BOARD vs JUT ── */
+      const bvj = $('#bvj-grid'); bvj.innerHTML = '';
+      [
+        { title:'⚛️ Physics / Science', rows:[['Board Science',r.board_science_marks||'—'],['Board %',r.board_science_pct?r.board_science_pct+'%':'—'],['JUT Phy Acc',(pf(r.phy_acc)||0)+'%'],['Verdict',r.science_board_vs_jut||'—']] },
+        { title:'📐 Maths',             rows:[['Board Maths',r.board_math_marks||'—'],['Board %',r.board_math_pct?r.board_math_pct+'%':'—'],['JUT Math Acc',(pf(r.math_acc)||0)+'%'],['Verdict',r.math_board_vs_jut||'—']] },
+      ].forEach(b => {
+        const c = el('div','bvj-card');
+        c.innerHTML = `<div class="bvj-title">${b.title}</div>` + b.rows.map(([k,v]) => `<div class="bvj-row"><span class="bvj-k">${k}</span><span class="bvj-v">${v}</span></div>`).join('');
+        bvj.appendChild(c);
       });
-      const bi=el('div','bvj-card');bi.style.gridColumn='1 / -1';
-      bi.innerHTML=`<div class="bvj-title">📋 Academic Profile</div>`+[['Board',r.board||'—'],['Medium',r.medium||'—'],['Overall %',r.board_total_pct?r.board_total_pct+'%':'—'],['Area of Interest',r.area_of_interest||'—']].map(([l,v])=>`<div class="bvj-row"><span>${l}</span><span class="gold">${v}</span></div>`).join('');
+      const bi = el('div','bvj-card'); bi.style.gridColumn = '1 / -1';
+      bi.innerHTML = `<div class="bvj-title">📋 Academic Profile</div>` + [['Board',r.board||'—'],['Medium',r.medium||'—'],['Overall %',r.board_total_pct?r.board_total_pct+'%':'—'],['Interests',r.area_of_interest||'—']].map(([k,v]) => `<div class="bvj-row"><span class="bvj-k">${k}</span><span class="bvj-v">${v}</span></div>`).join('');
       bvj.appendChild(bi);
 
-      // ORACLE
-      q('#advice-box').innerHTML=`
-        <div class="advice-item">💪 <span>Strength:</span> ${r.strength_line||'—'}</div>
-        <div class="advice-item">🎯 <span>Focus:</span> ${r.subject_advice||'—'}</div>
-        <div class="advice-item">💡 <span>Best Action:</span> ${r.improvement_tip||'—'}</div>
-        <div class="advice-item">⚓ <span>Risk Profile:</span> ${r.risk_profile||'—'}</div>
-        <div class="advice-item">🎯 <span>Sweet Spot:</span> ${r.sweet_spot_verdict||'—'}</div>
-        <div class="advice-item">📊 <span>Carry:</span> ${r.carry_subject||'—'} (+${r.carry_gap||0} above avg)</div>
-        <div class="advice-item">⚓ <span>Drag:</span> ${r.drag_subject||'—'} (-${r.drag_gap||0} below avg)</div>
-        <div class="advice-item">🔗 <span>Strongest Pair:</span> ${r.strongest_corr_pair||'—'}</div>
-        <div class="advice-item">📐 <span>Realisation:</span> ${r.realisation_rate||'—'}% — ${r.realisation_rate_label||'—'}</div>
-        <div class="advice-item">📐 <span>Subject σ:</span> ${r.consistency_index||'—'}</div>`;
+      /* ── ORACLE ── */
+      const ob = $('#oracle-box'); ob.innerHTML = '';
+      [
+        { icon:'💪', key:'Strength',    val:r.strength_line },
+        { icon:'🎯', key:'Focus',       val:r.subject_advice },
+        { icon:'💡', key:'Best Action', val:r.improvement_tip },
+        { icon:'⚓', key:'Risk',        val:r.risk_profile },
+        { icon:'🎯', key:'Sweet Spot',  val:r.sweet_spot_verdict },
+        { icon:'📊', key:'Carry',       val:`${r.carry_subject||'—'} (+${r.carry_gap||0} marks above avg)` },
+        { icon:'⚓', key:'Drag',        val:`${r.drag_subject||'—'} (-${r.drag_gap||0} marks below avg)` },
+        { icon:'📐', key:'Consistency', val:`σ = ${r.consistency_index||'—'}` },
+      ].forEach(row => {
+        const div = el('div','oracle-row');
+        div.innerHTML = `<div class="oracle-icon">${row.icon}</div><div class="oracle-key">${row.key}</div><div class="oracle-val">${row.val||'—'}</div>`;
+        ob.appendChild(div);
+      });
 
-      const rfw=q('#rf-wrap');
-      if(r.red_flag_count&&parseInt2(r.red_flag_count)>0){
-        rfw.innerHTML=`<div class="rf-box">🚨 <strong style="color:var(--red)">Red Flags (${r.red_flag_count})</strong><br><br>${r.red_flag_alert||'—'}</div>`;
+      const rfw = $('#rf-wrap');
+      if (r.red_flag_count && pi(r.red_flag_count) > 0) {
+        rfw.innerHTML = `<div class="red-flag-box"><div class="rf-title">🚨 Red Flags (${r.red_flag_count})</div><div class="rf-text">${r.red_flag_alert||'—'}</div></div>`;
       } else {
-        rfw.innerHTML=`<div class="rf-box" style="border-color:var(--green)">✅ <strong style="color:var(--green)">No red flags this exam</strong></div>`;
+        rfw.innerHTML = `<div class="red-flag-box" style="border-color:rgba(40,216,128,.3);background:linear-gradient(135deg,rgba(40,216,128,.05),var(--bg2))"><div class="rf-title" style="color:var(--green)">✅ No Red Flags This Exam</div></div>`;
       }
 
-      const fs_=q('#flags-strip');fs_.innerHTML='';
-      [{label:'🏆 Personal Best',on:r.personal_best_flag==='1',cls:'on'},
-       {label:'📈 Rank Improved',on:r.rank_improved_flag==='1',cls:'on'},
-       {label:'✅ All Subjects +ve',on:r.all_subjects_positive_flag==='1',cls:'on'},
-       {label:'📈 Improving Streak',on:parseInt2(r.streak_improving)>=2,cls:'on'},
-       {label:'🔄 Bounce Back',on:r.bounce_back_flag==='1',cls:'on'},
-       {label:'🎯 Hit Target',on:parseInt2(r.times_hit_target_so_far)>0,cls:'on'},
-       {label:'⭐ Top 10%',on:r.top10_flag==='1',cls:'on'},
-       {label:'🎯 Full Attempt',on:r.full_attempt_flag==='1',cls:'on'},
-       {label:'📈 Beats Own Avg',on:r.beats_own_avg_flag==='1',cls:'on'},
-       {label:'📈 Beats Fleet Avg',on:r.beats_fleet_avg_flag==='1',cls:'on'},
-       {label:'⚠️ Personal Worst',on:r.personal_worst_flag==='1',cls:'warn'},
-       {label:'🔴 Negative Maths',on:r.negative_math_flag==='1',cls:'bad'},
-       {label:'😴 Zero Math Att',on:r.zero_math_attempt_flag==='1',cls:'bad'},
-       {label:'📉 Declining Streak',on:parseInt2(r.streak_declining)>=2,cls:'bad'},
-      ].forEach(f=>{
-        const chip=el('div',`flag-chip ${f.on?f.cls:'off'}`);chip.textContent=f.label;fs_.appendChild(chip);
+      const fr = $('#flags-row'); fr.innerHTML = '';
+      [
+        { label:'🏆 Personal Best',    on:r.personal_best_flag==='1',      type:'good' },
+        { label:'📈 Rank Improved',    on:r.rank_improved_flag==='1',       type:'good' },
+        { label:'✅ All +ve Subjects', on:r.all_subjects_positive_flag==='1',type:'good' },
+        { label:'📈 Improving Streak', on:pi(r.streak_improving)>=2,        type:'good' },
+        { label:'🎯 Hit Target',       on:r.times_hit_target_so_far>0,      type:'good' },
+        { label:'⭐ Top 10%',          on:r.top10_flag==='1',               type:'good' },
+        { label:'📈 Beats Own Avg',    on:r.beats_own_avg_flag==='1',       type:'good' },
+        { label:'📈 Beats Fleet Avg',  on:r.beats_fleet_avg_flag==='1',     type:'good' },
+        { label:'⚠️ Personal Worst',   on:r.personal_worst_flag==='1',      type:'warn' },
+        { label:'🔴 Negative Maths',   on:r.negative_math_flag==='1',       type:'bad' },
+        { label:'😴 Zero Math Att',    on:r.zero_math_attempt_flag==='1',   type:'bad' },
+        { label:'📉 Declining Streak', on:pi(r.streak_declining)>=2,        type:'bad' },
+      ].forEach(f => {
+        const chip = el('div', `flag-chip ${f.on?'on-'+f.type:'off'}`);
+        chip.textContent = f.label;
+        fr.appendChild(chip);
       });
-    }
+    } // end render()
   },
-  error(){window.location.href='404.html';}
+  error() { window.location.href = '404.html'; }
 });
 
-// Embers
-const ec=document.getElementById('embers');
-const cols=['#f0b840','#e84c0e','#f0b840','#c8922a','#f0b840'];
-for(let i=0;i<18;i++){
-  const e=document.createElement('div');e.className='ember';
-  e.style.setProperty('--x',`${Math.random()*100}%`);
-  e.style.setProperty('--dur',`${(4+Math.random()*5).toFixed(1)}s`);
-  e.style.setProperty('--delay',`${(Math.random()*8).toFixed(1)}s`);
-  e.style.setProperty('--sw',`${(Math.random()*2-1).toFixed(2)}`);
-  e.style.background=cols[Math.floor(Math.random()*cols.length)];
-  if(Math.random()>.72){e.style.width='3px';e.style.height='3px';}
+/* ════ EMBERS ════ */
+const ec = document.getElementById('embers');
+const emberCols = ['#f0c050','#e05a1a','#f0c050','#d4a030','#f0c050','#3dd6c8'];
+for (let i = 0; i < 28; i++) {
+  const e = document.createElement('div');
+  e.className = 'ember';
+  const sz = Math.random() > 0.72 ? '3px' : '2px';
+  e.style.cssText = `--x:${Math.random()*100}%;--dur:${(4+Math.random()*6).toFixed(1)}s;--delay:${(Math.random()*9).toFixed(1)}s;--sw:${(Math.random()*2-1).toFixed(2)};--col:${emberCols[Math.floor(Math.random()*emberCols.length)]};--sz:${sz};width:${sz};height:${sz}`;
   ec.appendChild(e);
+}
+
+/* ════ SCROLL REVEAL ════ */
+function initReveal() {
+  const obs = new IntersectionObserver(entries => entries.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); obs.unobserve(e.target); } }), { threshold: 0.06 });
+  document.querySelectorAll('.reveal').forEach(el => obs.observe(el));
+}
+
+/* ════ NAV HIGHLIGHT ════ */
+function initNavHighlight() {
+  const sections = document.querySelectorAll('.section[id], .hero[id]');
+  const navItems = document.querySelectorAll('.nav-item');
+  const obs = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        navItems.forEach(n => { n.classList.toggle('active', n.getAttribute('href') === '#' + entry.target.id); });
+      }
+    });
+  }, { rootMargin: '-40% 0px -50% 0px' });
+  sections.forEach(s => obs.observe(s));
 }
 </script>
 </body>
